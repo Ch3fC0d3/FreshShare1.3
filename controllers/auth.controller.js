@@ -4,7 +4,7 @@ const db = require('../models');
 const User = db.user;
 
 // Retrieve JWT secret from environment or use a default (in production, always use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || "bezkoder-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || 'freshShare-auth-secret';
 
 /**
  * Register a new user
@@ -33,22 +33,47 @@ exports.signup = async (req, res) => {
 
     console.log('Checking for existing user with username or email:', { username, email });
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [
-        { username: username },
-        { email: email }
-      ] 
-    });
-
-    if (existingUser) {
-      console.log('User already exists:', { 
-        existingUsername: existingUser.username, 
-        existingEmail: existingUser.email 
+    try {
+      // Check if user already exists - with detailed logging and case-insensitive comparison
+      console.log('Running User.findOne query with case-insensitive comparison...');
+      const existingUser = await User.findOne({ 
+        $or: [
+          { username: { $regex: new RegExp('^' + username + '$', 'i') } },
+          { email: { $regex: new RegExp('^' + email + '$', 'i') } }
+        ] 
       });
-      return res.status(400).json({
+      console.log('Query completed. Result:', existingUser ? 'User found' : 'No user found');
+
+      if (existingUser) {
+        console.log('User already exists:', { 
+          existingUsername: existingUser.username, 
+          existingEmail: existingUser.email,
+          existingId: existingUser._id
+        });
+        
+        // Check if this is a test environment and allow overwriting
+        const isTestEnv = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+        const forceOverwrite = req.body.forceOverwrite === true;
+        
+        if (isTestEnv && forceOverwrite) {
+          console.log('Test environment with force overwrite flag - deleting existing user');
+          await User.deleteOne({ _id: existingUser._id });
+          console.log('Existing user deleted, proceeding with registration');
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: "Username or email is already in use!"
+          });
+        }
+      }
+      
+      console.log('No existing user found or user deleted, proceeding with registration');
+    } catch (findError) {
+      console.error('Error checking for existing user:', findError);
+      return res.status(500).json({
         success: false,
-        message: "Username or email is already in use!"
+        message: "Error checking for existing user",
+        error: findError.message
       });
     }
 
@@ -147,7 +172,8 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 86400000, // 24 hours in milliseconds
-      sameSite: 'strict'
+      path: '/',        // Make cookie available for the entire domain
+      sameSite: 'lax'   // Less restrictive than 'strict' for better compatibility
     });
 
     // Create user object without password

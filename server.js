@@ -112,8 +112,8 @@ app.use(async (req, res, next) => {
 
     if (token) {
       try {
-        // Verify token using the same secret as in auth.config.js
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "bezkoder-secret-key");
+        // Verify token using the same secret as in auth.controller.js
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'freshShare-auth-secret');
         const User = require('./models/user.model');
         const user = await User.findById(decoded.id).select('-password');
         
