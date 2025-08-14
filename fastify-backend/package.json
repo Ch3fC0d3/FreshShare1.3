@@ -1,0 +1,19 @@
+{
+  "name": "freshshare-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node server.ts",
+    "start": "node --loader ts-node/esm server.ts",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "pg": "^8.11.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  }
+}
