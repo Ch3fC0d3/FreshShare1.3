@@ -38,4 +38,17 @@ router.get('/api/auth/profile', [authJwt.verifyToken], authController.getUserPro
 // Update user profile (protected route)
 router.put('/api/auth/profile', [authJwt.verifyToken], authController.updateUserProfile);
 
+// Duplicate routes with relative paths for proper API mounting
+// Register a new user
+router.post('/signup', authController.signup);
+
+// Login a user
+router.post('/login', authController.login);
+
+// Get user profile (protected route)
+router.get('/profile', [authJwt.verifyToken], authController.getUserProfile);
+
+// Update user profile (protected route)
+router.put('/profile', [authJwt.verifyToken], authController.updateUserProfile);
+
 module.exports = router;

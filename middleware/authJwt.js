@@ -141,9 +141,49 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
+/**
+ * Check if user has admin role
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {Object} - Continues to next middleware or returns error response
+ */
+const isAdmin = async (req, res, next) => {
+  try {
+    // Get user from database
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!"
+      });
+    }
+    
+    // Check if user has admin role
+    if (user.roles && user.roles.includes('admin')) {
+      return next();
+    }
+    
+    // User is not admin
+    return res.status(403).json({
+      success: false,
+      message: "Requires Admin Role!"
+    });
+  } catch (error) {
+    console.error('Admin role check error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error checking admin role",
+      error: error.message
+    });
+  }
+};
+
 const authJwt = {
   verifyToken,
-  isAuthenticated
+  isAuthenticated,
+  isAdmin
 };
 
 module.exports = authJwt;

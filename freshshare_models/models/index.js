@@ -1,0 +1,20 @@
+// models/index.js
+module.exports = {
+  User: require('./User'),
+  Role: require('./Role'),
+  Group: require('./Group'),
+  Hub: require('./Hub'),
+  PickupSlot: require('./PickupSlot'),
+  CalendarEvent: require('./CalendarEvent'),
+  Listing: require('./Listing'),
+  Order: require('./Order'),
+  LineItemShare: require('./LineItemShare'),
+  PaymentIntent: require('./PaymentIntent'),
+  Shipment: require('./Shipment'),
+  SplitTask: require('./SplitTask'),
+  Adjustment: require('./Adjustment'),
+  Rating: require('./Rating'),
+  Notification: require('./Notification'),
+  RSVP: require('./RSVP'),
+  ActivityLog: require('./ActivityLog'),
+};

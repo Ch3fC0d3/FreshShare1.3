@@ -73,6 +73,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
 
+// Content Security Policy middleware
+app.use((req, res, next) => {
+  // In development, allow 'unsafe-eval' for easier debugging
+  // In production, this should be more restrictive
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: blob:; font-src 'self' https://cdnjs.cloudflare.com"
+  );
+  next();
+});
+
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
@@ -146,13 +157,21 @@ const wrapAsync = fn => (req, res, next) => {
 
 // Auth routes (both pages and API)
 const authRoutes = require('./routes/auth.routes');
-app.use('/', authRoutes); // Mount at root for pages
+
+// Mount auth routes at root for page routes
+app.use('/', authRoutes);
+
+// Mount auth routes at /api for API routes
+app.use('/api', authRoutes);
+
+// Additional routes
+require('./routes/user.routes')(app);
+require('./routes/dashboard.routes')(app);
 
 // Other API routes
 app.use('/api/marketplace', require('./routes/marketplace.routes'));
 app.use('/api/groups', require('./routes/groups.routes'));
 app.use('/api/orders', require('./routes/orders.routes'));
-
 // Page Routes
 app.get('/', (req, res) => {
   res.render('pages/index', { 
@@ -304,10 +323,7 @@ app.get('/profile-edit', async (req, res) => {
 });
 
 app.get('/dashboard', (req, res) => {
-  // Check if user is logged in
-  if (!res.locals.user) {
-    return res.redirect('/login');
-  }
+  // Always render dashboard; client will fetch data and handle auth redirects
   res.render('pages/dashboard', { 
     title: 'FreshShare - Dashboard'
   });
