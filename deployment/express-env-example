@@ -1,0 +1,4 @@
+PORT=8080
+FASTIFY_BACKEND_URL=http://localhost:8089
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/freshshare_db
+JWT_SECRET=your-strong-secret-key-here

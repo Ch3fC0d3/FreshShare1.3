@@ -1,0 +1,126 @@
+<%- contentFor('style') %>
+<link rel="stylesheet" href="/css/main.css">
+
+<%- contentFor('body') %>
+<section class="about-section">
+    <div class="about-container">
+        <div class="about-header">
+            <h1 class="about-title">About FreshShare</h1>
+            <p class="about-subtitle">Connecting communities through fresh food sharing and sustainable practices since 2021.</p>
+        </div>
+        
+        <!-- Mission Section -->
+        <div class="mission-section">
+            <h2 class="section-title">Our Mission</h2>
+            <div class="mission-content">
+                <div class="mission-text">
+                    <p>At FreshShare, our mission is to reduce food waste and build stronger communities through food sharing. We believe that food is a powerful connector and that by sharing our resources, we can create more sustainable and resilient communities.</p>
+                    <p>We're committed to making it easy for neighbors to connect, share surplus food, and build meaningful relationships. Our platform facilitates these connections by bringing together people who grow food with those who want to enjoy fresh, locally-sourced ingredients.</p>
+                    <p>Through FreshShare, we envision a world where access to fresh food is universal, and where the relationships between consumers, food producers, and the environment are mutually beneficial and sustainable.</p>
+                </div>
+                <div class="mission-image">
+                    <img src="/images/people.jpg" alt="FreshShare Community Garden">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Values Section -->
+        <div class="values-section">
+            <h2 class="section-title">Our Core Values</h2>
+            <div class="values-grid">
+                <div class="value-card">
+                    <div class="value-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h3 class="value-title">Sustainability</h3>
+                    <p class="value-description">We're committed to reducing food waste and promoting sustainable practices that benefit our planet and future generations. Every meal shared is one step toward a more sustainable food system.</p>
+                </div>
+                <div class="value-card">
+                    <div class="value-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="value-title">Community</h3>
+                    <p class="value-description">We believe in the power of connection and building stronger, more resilient communities through food sharing. Food has always been at the center of human connection, and we're bringing that tradition into the digital age.</p>
+                </div>
+                <div class="value-card">
+                    <div class="value-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3 class="value-title">Accessibility</h3>
+                    <p class="value-description">We're dedicated to making fresh, local food accessible to everyone, regardless of economic status or location. Our platform bridges gaps between food producers and consumers to create an equitable food system.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vision Section -->
+        <div class="team-section">
+            <h2 class="section-title">Our Vision</h2>
+            <div class="mission-content">
+                <div class="mission-text">
+                    <p>At FreshShare, we envision a world where everyone has access to fresh, locally-grown food. We believe that by connecting communities directly with food producers, we can build a more sustainable and equitable food system.</p>
+                    <p>Our platform is designed to eliminate barriers between those who grow food and those who consume it, reducing waste, supporting local economies, and fostering stronger community bonds in the process.</p>
+                    <p>With every connection made through FreshShare, we're building a future where food is not just sustenance, but a cornerstone of community resilience and environmental stewardship.</p>
+                </div>
+                <div class="mission-image">
+                    <img src="/images/people2.png" alt="Community Food Sharing">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Founder Section -->
+        <div class="founder-section">
+            <h2 class="section-title">Our Founder</h2>
+            <div class="founder-content">
+                <div class="founder-text">
+                    <h3 class="founder-name">Gabriel Pellegrini</h3>
+                    <p class="founder-role">Founder & CEO</p>
+                    <p class="founder-bio">
+                        Gabriel Pellegrini is a culinary professional turned tech-savvy entrepreneur with over 15 years of experience in the restaurant industry. Drawing on his expertise in Software Engineering and a strong background in menu development and operations, Gabriel is dedicated to making fresh, local food more accessible.
+                    </p>
+                    <p class="founder-bio">
+                        By blending culinary expertise with innovative tech solutions, he aims to bring communities closer to the farmers and producers who nourish them—one fresh share at a time.
+                    </p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- contentFor('script') %>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate elements when they come into view
+        const animateOnScroll = () => {
+            const elements = document.querySelectorAll('.value-card, .team-member, .founder-content, .mission-content');
+            
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const isVisible = rect.top <= window.innerHeight * 0.8;
+                
+                if (isVisible) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        };
+        
+        // Set initial opacity for animation
+        const elementsToAnimate = document.querySelectorAll('.value-card, .team-member, .founder-content, .mission-content');
+        elementsToAnimate.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        });
+        
+        // Initial check
+        setTimeout(animateOnScroll, 300);
+        
+        // Check on scroll
+        window.addEventListener('scroll', animateOnScroll);
+    });
+</script>

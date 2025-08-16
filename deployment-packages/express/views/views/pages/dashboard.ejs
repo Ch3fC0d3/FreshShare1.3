@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/dashboard-enhancements.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <%- contentFor('style') %>
+    <!-- Dashboard styles are now in main.css -->
+    <link rel="stylesheet" href="/css/main.css">
+
+</head>
+<body>
+    <div class="main-container">
+        <!-- Dashboard content without header or footer -->
+        <div class="dashboard-grid">
+            <!-- Left Column -->
+            <div class="grid-col-8">
+                <!-- Calendar Section -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2>Calendar</h2>
+                        <a href="#" class="view-all">View <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                    <div class="card-body">
+                        <div class="calendar-container">
+                            <div class="calendar-wrapper">
+                                <div class="calendar-header">
+                                    <div class="calendar-title">Feb 2025</div>
+                                    <div class="calendar-nav">
+                                        <button class="calendar-nav-btn"><i class="fas fa-chevron-left"></i></button>
+                                        <button class="calendar-nav-btn"><i class="fas fa-chevron-right"></i></button>
+                                    </div>
+                                </div>
+                                <div class="calendar-grid">
+                                    <div class="calendar-weekday">S</div>
+                                    <div class="calendar-weekday">M</div>
+                                    <div class="calendar-weekday">T</div>
+                                    <div class="calendar-weekday">W</div>
+                                    <div class="calendar-weekday">T</div>
+                                    <div class="calendar-weekday">F</div>
+                                    <div class="calendar-weekday">S</div>
+                                    
+                                    <div class="calendar-day other-month">28</div>
+                                    <div class="calendar-day other-month">29</div>
+                                    <div class="calendar-day other-month">30</div>
+                                    <div class="calendar-day other-month">31</div>
+                                    <div class="calendar-day">1</div>
+                                    <div class="calendar-day">2</div>
+                                    <div class="calendar-day">3</div>
+                                    
+                                    <div class="calendar-day">4</div>
+                                    <div class="calendar-day">5</div>
+                                    <div class="calendar-day">6</div>
+                                    <div class="calendar-day">7</div>
+                                    <div class="calendar-day">8</div>
+                                    <div class="calendar-day">9</div>
+                                    <div class="calendar-day">10</div>
+                                    
+                                    <div class="calendar-day">11</div>
+                                    <div class="calendar-day">12</div>
+                                    <div class="calendar-day">13</div>
+                                    <div class="calendar-day">14</div>
+                                    <div class="calendar-day">15</div>
+                                    <div class="calendar-day has-delivery">16</div>
+                                    <div class="calendar-day">17</div>
+                                    
+                                    <div class="calendar-day">18</div>
+                                    <div class="calendar-day">19</div>
+                                    <div class="calendar-day">20</div>
+                                    <div class="calendar-day has-delivery">21</div>
+                                    <div class="calendar-day">22</div>
+                                    <div class="calendar-day">23</div>
+                                    <div class="calendar-day">24</div>
+                                    
+                                    <div class="calendar-day">25</div>
+                                    <div class="calendar-day">26</div>
+                                    <div class="calendar-day">27</div>
+                                    <div class="calendar-day today has-delivery">28</div>
+                                    <div class="calendar-day">29</div>
+                                    <div class="calendar-day other-month">1</div>
+                                    <div class="calendar-day other-month">2</div>
+                                </div>
+                            </div>
+                            
+                            <div class="upcoming-events">
+                                <h3>Today's Schedule</h3>
+                                <div class="event-item">
+                                    <span class="event-date">9:00 AM</span>
+                                    <div class="event-title">Produce Delivery</div>
+                                    <div class="event-desc">Local Farm Co-op</div>
+                                </div>
+                                <div class="event-item">
+                                    <span class="event-date">2:30 PM</span>
+                                    <div class="event-title">Community Swap</div>
+                                    <div class="event-desc">Food exchange</div>
+                                </div>
+                                <div class="event-item">
+                                    <span class="event-date">5:00 PM</span>
+                                    <div class="event-title">Cooking Class</div>
+                                    <div class="event-desc">Seasonal recipes</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Section -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2>Recent Orders & Purchase History</h2>
+                        <a href="#" class="view-all">View Full Order History <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                    <div class="card-body">
+                        <ul class="order-list">
+                            <!-- Example order item -->
+                            <li class="order-item">
+                                <div class="order-header">
+                                    <span class="order-id">Order #38291</span>
+                                    <span class="order-date">Feb 21, 2025</span>
+                                </div>
+                                <div class="order-items">
+                                    Local Honey, Fresh Bread, Organic Eggs (5 items)
+                                </div>
+                                <div class="order-footer">
+                                    <span class="order-total">$43.50</span>
+                                    <div class="order-actions">
+                                        <button class="btn btn-outline">View Details</button>
+                                        <button class="btn btn-primary">Reorder</button>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="grid-col-4">
+                <!-- Upcoming Deliveries Section -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2>Upcoming Deliveries</h2>
+                        <a href="#" class="view-all">View All <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                    <div class="card-body">
+                        <ul class="delivery-list">
+                            <li class="delivery-item">
+                                <div>
+                                    <span>Publish Basket</span>
+                                    <span>Tomorrow</span>
+                                </div>
+                                <div>
+                                    From: Green Valley Farms
+                                </div>
+                                <div>
+                                    <span>Confirmed</span>
+                                    <span>$28.50</span>
+                                </div>
+                            </li>
+                            
+                            <li class="delivery-item">
+                                <div>
+                                    <span>Bakery Bundle</span>
+                                    <span>Mar 3, 2025</span>
+                                </div>
+                                <div>
+                                    From: Artisan Bread Co.
+                                </div>
+                                <div>
+                                    <span>Pending</span>
+                                    <span>$16.75</span>
+                                </div>
+                            </li>
+                            
+                            <li class="delivery-item">
+                                <div>
+                                    <span>Dairy Selection</span>
+                                    <span>Mar 5, 2025</span>
+                                </div>
+                                <div>
+                                    From: Local Creamery
+                                </div>
+                                <div>
+                                    <span>Confirmed</span>
+                                    <span>$22.00</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Messages Section -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2>Messages & Notifications</h2>
+                        <a href="#" class="view-all">View All <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                    <div class="card-body">
+                        <ul class="message-list">
+                            <li class="message-item">
+                                <div>
+                                    <div>
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div>
+                                        <div>Delivery Confirmation</div>
+                                        <div>Your delivery is scheduled for tomorrow</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    2 hours ago
+                                </div>
+                            </li>
+                            
+                            <li class="message-item">
+                                <div>
+                                    <div>
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div>Sarah Johnson</div>
+                                        <div>Thanks for sharing the extra tomatoes!</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    Yesterday
+                                </div>
+                            </li>
+                            
+                            <li class="message-item">
+                                <div>
+                                    <div>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div>
+                                        <div>Community Update</div>
+                                        <div>New farmers added to your local network</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    Feb 26
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard data loading and display
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Show loading state
+            showLoading();
+            
+            try {
+                console.log('Fetching dashboard data...');
+                
+                // Fetch dashboard data from API (use cookie-based auth; token is HttpOnly)
+                const response = await fetch('/api/dashboard/data', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                console.log('API response status:', response.status);
+                
+                if (response.status === 401 || response.status === 403) {
+                    showError('Authentication required. Please log in again.');
+                    setTimeout(() => {
+                        window.location.href = '/login?redirect=/dashboard';
+                    }, 1500);
+                    return;
+                }
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
+                }
+                
+                const dashboardData = await response.json();
+                console.log('Dashboard data loaded successfully');
+                
+                // Update UI with real data
+                updateDashboardUI(dashboardData);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Failed to load dashboard data. Please try again later.');
+                
+                // Add fallback data for development/testing
+                if (window.location.hostname === 'localhost') {
+                    console.log('Using fallback data for development');
+                    updateDashboardUI({
+                        user: {
+                            username: 'TestUser',
+                            fullName: 'Test User',
+                            profileImage: '/assets/images/avatar-placeholder.jpg',
+                            location: 'Test City'
+                        },
+                        upcomingDeliveries: [],
+                        recentOrders: [],
+                        messages: [],
+                        groupActivities: [],
+                        calendar: {
+                            currentMonth: new Date().getMonth(),
+                            currentYear: new Date().getFullYear(),
+                            daysWithEvents: [15, 22],
+                            events: []
+                        }
+                    });
+                }
+            } finally {
+                hideLoading();
+            }
+            
+            // Calendar setup
+            const today = new Date();
+            const currentDay = today.getDate(); // Use actual current day
+            
+            // Calendar navigation
+            const prevMonthBtn = document.querySelector('.calendar-nav-btn:first-child');
+            const nextMonthBtn = document.querySelector('.calendar-nav-btn:last-child');
+            const calendarTitle = document.querySelector('.calendar-title');
+            
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            let currentMonthIndex = today.getMonth();
+            let currentYear = today.getFullYear();
+            
+            // Update calendar title with current month and year
+            calendarTitle.textContent = `${months[currentMonthIndex]} ${currentYear}`;
+            
+            prevMonthBtn.addEventListener('click', () => {
+                currentMonthIndex--;
+                if (currentMonthIndex < 0) {
+                    currentMonthIndex = 11;
+                    currentYear--;
+                }
+                calendarTitle.textContent = `${months[currentMonthIndex]} ${currentYear}`;
+            });
+            
+            nextMonthBtn.addEventListener('click', () => {
+                currentMonthIndex++;
+                if (currentMonthIndex > 11) {
+                    currentMonthIndex = 0;
+                    currentYear++;
+                }
+                calendarTitle.textContent = `${months[currentMonthIndex]} ${currentYear}`;
+            });
+        });
+        // Helper functions for dashboard data handling
+        
+        // Get cookie by name
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // Show loading state
+        function showLoading() {
+            // Create loading overlay if it doesn't exist
+            if (!document.getElementById('loading-overlay')) {
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'loading-overlay';
+                loadingOverlay.innerHTML = `
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading dashboard data...</p>
+                    </div>
+                `;
+                loadingOverlay.style.position = 'fixed';
+                loadingOverlay.style.top = '0';
+                loadingOverlay.style.left = '0';
+                loadingOverlay.style.width = '100%';
+                loadingOverlay.style.height = '100%';
+                loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.justifyContent = 'center';
+                loadingOverlay.style.alignItems = 'center';
+                loadingOverlay.style.zIndex = '9999';
+                document.body.appendChild(loadingOverlay);
+            } else {
+                document.getElementById('loading-overlay').style.display = 'flex';
+            }
+        }
+        
+        // Hide loading state
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            // Create error toast
+            const errorToast = document.createElement('div');
+            errorToast.className = 'error-toast';
+            errorToast.innerHTML = `
+                <div class="error-toast-content">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="error-toast-close"><i class="fas fa-times"></i></button>
+            `;
+            errorToast.style.position = 'fixed';
+            errorToast.style.bottom = '20px';
+            errorToast.style.right = '20px';
+            errorToast.style.backgroundColor = '#f44336';
+            errorToast.style.color = 'white';
+            errorToast.style.padding = '15px';
+            errorToast.style.borderRadius = '4px';
+            errorToast.style.display = 'flex';
+            errorToast.style.justifyContent = 'space-between';
+            errorToast.style.alignItems = 'center';
+            errorToast.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+            errorToast.style.zIndex = '10000';
+            errorToast.style.minWidth = '300px';
+            
+            document.body.appendChild(errorToast);
+            
+            // Add close button functionality
+            const closeButton = errorToast.querySelector('.error-toast-close');
+            closeButton.addEventListener('click', () => {
+                document.body.removeChild(errorToast);
+            });
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(errorToast)) {
+                    document.body.removeChild(errorToast);
+                }
+            }, 5000);
+        }
+        
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        // Update dashboard UI with real data
+        function updateDashboardUI(data) {
+            try {
+                // Update user profile information if available
+                if (data.user) {
+                    const userWelcome = document.querySelector('.welcome-message h1');
+                    if (userWelcome) {
+                        userWelcome.textContent = `Welcome back, ${data.user.username}!`;
+                    }
+                    
+                    const userLocation = document.querySelector('.user-location');
+                    if (userLocation && data.user.location) {
+                        userLocation.textContent = data.user.location;
+                    }
+                }
+                
+                // Update calendar with real events
+                if (data.calendar && data.calendar.events) {
+                    updateCalendar(data.calendar);
+                }
+                
+                // Update upcoming deliveries
+                if (data.upcomingDeliveries && data.upcomingDeliveries.length > 0) {
+                    updateUpcomingDeliveries(data.upcomingDeliveries);
+                }
+                
+                // Update recent orders
+                if (data.recentOrders && data.recentOrders.length > 0) {
+                    updateRecentOrders(data.recentOrders);
+                }
+                
+                // Update messages
+                if (data.messages && data.messages.length > 0) {
+                    updateMessages(data.messages);
+                }
+            } catch (error) {
+                console.error('Error updating dashboard UI:', error);
+                showError('Error updating dashboard display. Please refresh the page.');
+            }
+        }
+        
+        // Update calendar with real events
+        function updateCalendar(calendarData) {
+            // Mark days with events
+            if (calendarData.daysWithEvents && calendarData.daysWithEvents.length > 0) {
+                const calendarDays = document.querySelectorAll('.calendar-day:not(.other-month)');
+                
+                // Reset all days
+                calendarDays.forEach(day => {
+                    day.classList.remove('has-delivery', 'has-pickup');
+                });
+                
+                // Mark days with events
+                calendarDays.forEach(day => {
+                    const dayNumber = parseInt(day.textContent);
+                    if (calendarData.daysWithEvents.includes(dayNumber)) {
+                        // Check event type
+                        const eventsForDay = calendarData.events.filter(event => event.day === dayNumber);
+                        if (eventsForDay.some(event => event.type === 'delivery')) {
+                            day.classList.add('has-delivery');
+                        }
+                        if (eventsForDay.some(event => event.type === 'pickup')) {
+                            day.classList.add('has-pickup');
+                        }
+                    }
+                });
+            }
+            
+            // Update today's schedule
+            if (calendarData.events) {
+                const todayEvents = calendarData.events.filter(event => {
+                    return event.day === new Date().getDate();
+                });
+                
+                if (todayEvents.length > 0) {
+                    const eventsContainer = document.querySelector('.upcoming-events');
+                    if (eventsContainer) {
+                        // Clear existing events
+                        eventsContainer.innerHTML = '<h3>Today\'s Schedule</h3>';
+                        
+                        // Add new events
+                        todayEvents.forEach(event => {
+                            const eventItem = document.createElement('div');
+                            eventItem.className = 'event-item';
+                            eventItem.innerHTML = `
+                                <span class="event-date">${event.type === 'delivery' ? 'Delivery' : 'Pickup'}</span>
+                                <div class="event-title">${event.title}</div>
+                                <div class="event-desc">Order #${event.orderId.substring(0, 6)}</div>
+                            `;
+                            eventsContainer.appendChild(eventItem);
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Update upcoming deliveries
+        function updateUpcomingDeliveries(deliveries) {
+            const deliveryList = document.querySelector('.delivery-list');
+            if (deliveryList) {
+                // Clear existing items
+                deliveryList.innerHTML = '';
+                
+                // Add new items
+                deliveries.forEach(delivery => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'delivery-item';
+                    
+                    const listingTitle = delivery.listing ? delivery.listing.title : 'Unknown Item';
+                    const sellerName = delivery.seller ? delivery.seller.username : 'Unknown Seller';
+                    const deliveryDate = formatDate(delivery.deliveryDate);
+                    const price = delivery.listing ? `$${delivery.listing.price.toFixed(2)}` : 'N/A';
+                    
+                    listItem.innerHTML = `
+                        <div>
+                            <span>${listingTitle}</span>
+                            <span>${deliveryDate}</span>
+                        </div>
+                        <div>
+                            From: ${sellerName}
+                        </div>
+                        <div>
+                            <span>${delivery.status}</span>
+                            <span>${price}</span>
+                        </div>
+                    `;
+                    
+                    deliveryList.appendChild(listItem);
+                });
+            }
+        }
+        
+        // Update recent orders
+        function updateRecentOrders(orders) {
+            const orderList = document.querySelector('.order-list');
+            if (orderList) {
+                // Clear existing items
+                orderList.innerHTML = '';
+                
+                // Add new items
+                orders.forEach(order => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'order-item';
+                    
+                    const orderId = order._id.substring(0, 6);
+                    const orderDate = formatDate(order.createdAt || order.updatedAt);
+                    const listingTitle = order.listing ? order.listing.title : 'Unknown Item';
+                    const price = order.listing ? `$${order.listing.price.toFixed(2)}` : 'N/A';
+                    
+                    listItem.innerHTML = `
+                        <div class="order-header">
+                            <span class="order-id">Order #${orderId}</span>
+                            <span class="order-date">${orderDate}</span>
+                        </div>
+                        <div class="order-items">
+                            ${listingTitle}
+                        </div>
+                        <div class="order-footer">
+                            <span class="order-total">${price}</span>
+                            <div class="order-actions">
+                                <button class="btn btn-outline" onclick="window.location.href='/orders/${order._id}'">View Details</button>
+                                <button class="btn btn-primary">Reorder</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    orderList.appendChild(listItem);
+                });
+            }
+        }
+        
+        // Update messages
+        function updateMessages(messages) {
+            const messageList = document.querySelector('.message-list');
+            if (messageList) {
+                // Clear existing items
+                messageList.innerHTML = '';
+                
+                // Add new items
+                messages.forEach(msg => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'message-item';
+                    
+                    const icon = msg.isIncoming ? 'fa-user' : 'fa-paper-plane';
+                    const username = msg.user ? msg.user.username : 'System';
+                    
+                    listItem.innerHTML = `
+                        <div>
+                            <div>
+                                <i class="fas ${icon}"></i>
+                            </div>
+                            <div>
+                                <div>${username}</div>
+                                <div>${msg.message}</div>
+                            </div>
+                        </div>
+                        <div>
+                            ${msg.time}
+                        </div>
+                    `;
+                    
+                    messageList.appendChild(listItem);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
