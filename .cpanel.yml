@@ -1,0 +1,20 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/myfrovov/public_html/
+    - /bin/cp -R config $DEPLOYPATH
+    - /bin/cp -R controllers $DEPLOYPATH
+    - /bin/cp -R middleware $DEPLOYPATH
+    - /bin/cp -R models $DEPLOYPATH
+    - /bin/cp -R public $DEPLOYPATH
+    - /bin/cp -R routes $DEPLOYPATH
+    - /bin/cp -R views $DEPLOYPATH
+    - /bin/cp server.js $DEPLOYPATH
+    - /bin/cp package.json $DEPLOYPATH
+    - /bin/cp package-lock.json $DEPLOYPATH
+    # For fastify backend (optional, adjust if needed)
+    - export FASTIFYPATH=/home/myfrovov/fastify-backend/
+    - /bin/mkdir -p $FASTIFYPATH
+    - /bin/cp -R fastify-backend/* $FASTIFYPATH
+    # Set proper permissions
+    - /bin/chmod 755 $DEPLOYPATH
