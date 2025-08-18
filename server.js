@@ -11,6 +11,24 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const authJwt = require('./middleware/authJwt');
 const querystring = require('querystring');
 
+// Custom error logging to a public file
+const logErrorToFile = (error) => {
+  try {
+    const logFilePath = path.join(__dirname, 'public', 'startup_error.log');
+    const errorMessage = `[${new Date().toISOString()}] ERROR: ${error.stack || error}\n\n`;
+    const fs = require('fs');
+    fs.appendFileSync(logFilePath, errorMessage);
+  } catch (e) {
+    console.error('Failed to write to custom log file:', e);
+  }
+};
+
+process.on('uncaughtException', (err, origin) => {
+  console.error(`Caught exception: ${err}\n` + `Exception origin: ${origin}`);
+  logErrorToFile(err);
+  process.exit(1);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -49,6 +67,7 @@ mongoose.connect(connectionURL, dbConfig.options)
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
+    logErrorToFile(err);
     // process.exit(1); // Commented out to prevent server crash on DB connection failure
   });
 
