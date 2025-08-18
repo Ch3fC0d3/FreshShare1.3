@@ -45,7 +45,7 @@ mongoose.connect(connectionURL, dbConfig.options)
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
-    process.exit(1);
+    // process.exit(1); // Commented out to prevent server crash on DB connection failure
   });
 
 // Initialize database with roles if needed
