@@ -214,6 +214,17 @@ require('./routes/dashboard.routes')(app);
 app.use('/api/marketplace', require('./routes/marketplace.routes'));
 app.use('/api/groups', require('./routes/groups.routes'));
 app.use('/api/orders', require('./routes/orders.routes'));
+// Health check endpoint
+app.get('/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+  if (dbState === 1) {
+    res.status(200).json({ status: 'ok', database: 'connected' });
+  } else {
+    res.status(503).json({ status: 'error', database: 'disconnected', readyState: dbState });
+  }
+});
+
 // Page Routes
 app.get('/', (req, res) => {
   res.render('pages/index', { 
