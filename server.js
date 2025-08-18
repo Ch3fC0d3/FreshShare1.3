@@ -39,7 +39,7 @@ if (process.env.MONGODB_URI) {
 // Connect to MongoDB with better error handling
 console.log('Attempting to connect to MongoDB...', {
   connectionString: connectionURL ? 'Configured' : 'Missing',
-  usingAtlas: process.env.MONGODB_HOST ? true : false
+  usingAtlas: !!(process.env.MONGODB_URI || process.env.MONGODB_HOST)
 });
 
 mongoose.connect(connectionURL, dbConfig.options)
