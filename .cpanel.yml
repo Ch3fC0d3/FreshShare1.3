@@ -18,23 +18,34 @@ deployment:
     - /bin/cp package.json $DEPLOYPATH
     - /bin/cp package-lock.json $DEPLOYPATH
     - /bin/cp proxy-server.js $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH
+    - /bin/cp start-express.sh $DEPLOYPATH
     
-    # Deploy template .env files (if they don't exist)
-    - if [ ! -f $DEPLOYPATH.env ]; then /bin/cp deployment/.env.express.example $DEPLOYPATH.env; fi
+    # Deploy environment files
+    - /bin/cp .env.production $DEPLOYPATH.env
     
     # Deploy Fastify backend
     - /bin/mkdir -p $FASTIFYPATH
     - /bin/cp -R fastify-backend/* $FASTIFYPATH
-    - if [ ! -f $FASTIFYPATH.env ]; then /bin/cp deployment/.env.fastify.example $FASTIFYPATH.env; fi
+    - /bin/cp fastify-backend/.env.production $FASTIFYPATH.env
+    - /bin/cp fastify-backend/start-fastify.sh $FASTIFYPATH
     
-    # Deploy PM2 ecosystem config
-    - /bin/cp deployment/ecosystem.config.js $ROOTPATH
+    # Copy documentation
+    - /bin/cp DEPLOYMENT_STEPS.md $ROOTPATH
+    - /bin/cp mongodb-atlas-setup.md $ROOTPATH
     
     # Set proper permissions
     - /bin/chmod 755 $DEPLOYPATH
     - /bin/chmod 755 $FASTIFYPATH
     - /bin/chmod 600 $DEPLOYPATH.env
     - /bin/chmod 600 $FASTIFYPATH.env
+    - /bin/chmod +x $DEPLOYPATH/start-express.sh
+    - /bin/chmod +x $FASTIFYPATH/start-fastify.sh
     
-    # Restart services (only if they exist)
-    - source $ROOTPATH/nodevenv/freshshare1.3/14/bin/activate && pm2 reload all || echo "PM2 not available or no processes to reload"
+    # Install dependencies for both services
+    - cd $DEPLOYPATH && npm install --production
+    - cd $FASTIFYPATH && npm install --production
+    
+    # Restart services
+    - cd $FASTIFYPATH && ./start-fastify.sh > fastify.log 2>&1 &
+    - cd $DEPLOYPATH && ./start-express.sh > express.log 2>&1 &
