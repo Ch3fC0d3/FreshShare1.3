@@ -19,14 +19,18 @@ const dbConfig = require('./config/db.config');
 
 // Prioritize MongoDB Atlas connection from environment variables
 let connectionURL;
-if (process.env.MONGODB_HOST) {
-  // Use MongoDB Atlas connection
+if (process.env.MONGODB_URI) {
+  // Use MongoDB Atlas connection from MONGODB_URI
+  connectionURL = process.env.MONGODB_URI;
+  console.log('Using MongoDB Atlas connection from MONGODB_URI');
+} else if (process.env.MONGODB_HOST) {
+  // Use MongoDB Atlas connection from separate host/db variables
   connectionURL = process.env.MONGODB_HOST;
   if (!connectionURL.endsWith('/')) {
     connectionURL += '/';
   }
   connectionURL += process.env.MONGODB_DB || dbConfig.DB;
-  console.log('Using MongoDB Atlas connection');
+  console.log('Using MongoDB Atlas connection from MONGODB_HOST');
 } else {
   // Fallback to local MongoDB connection
   connectionURL = `mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}`;
