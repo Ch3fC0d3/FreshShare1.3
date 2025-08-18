@@ -76,8 +76,28 @@ This guide provides instructions for updating your existing Node.js application 
 
 ### MongoDB Atlas Setup
 
-1. Follow the MongoDB Atlas setup instructions in the `NAMECHEAP_HOSTING_GUIDE.md`
+1. Create a MongoDB Atlas account if you don't already have one
 2. Update your `.env` file with the MongoDB Atlas connection string
+
+**For Express Frontend**
+
+```
+MONGODB_HOST=mongodb+srv://gabepell:YOUR_ACTUAL_PASSWORD@cluster0.yvbja.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_DB=FreshSareDB
+PORT=3001
+JWT_SECRET=freshshare-secret-key
+FASTIFY_BACKEND_URL=http://localhost:8080
+```
+
+**For Fastify Backend**
+
+```
+PORT=8080
+DATABASE_URL=mongodb+srv://gabepell:YOUR_ACTUAL_PASSWORD@cluster0.yvbja.mongodb.net/FreshSareDB?retryWrites=true&w=majority&appName=Cluster0
+NODE_ENV=production
+```
+
+> **Note**: Replace `YOUR_ACTUAL_PASSWORD` with your MongoDB Atlas password
 
 ### PostgreSQL Setup
 

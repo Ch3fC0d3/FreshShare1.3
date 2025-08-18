@@ -1,7 +1,12 @@
 ---
 deployment:
   tasks:
+    # Set up deployment paths
     - export DEPLOYPATH=/home/myfrovov/public_html/
+    - export FASTIFYPATH=/home/myfrovov/fastify-backend/
+    - export ROOTPATH=/home/myfrovov/
+    
+    # Deploy Express frontend files
     - /bin/cp -R config $DEPLOYPATH
     - /bin/cp -R controllers $DEPLOYPATH
     - /bin/cp -R middleware $DEPLOYPATH
@@ -12,9 +17,24 @@ deployment:
     - /bin/cp server.js $DEPLOYPATH
     - /bin/cp package.json $DEPLOYPATH
     - /bin/cp package-lock.json $DEPLOYPATH
-    # For fastify backend (optional, adjust if needed)
-    - export FASTIFYPATH=/home/myfrovov/fastify-backend/
+    - /bin/cp proxy-server.js $DEPLOYPATH
+    
+    # Deploy template .env files (if they don't exist)
+    - if [ ! -f $DEPLOYPATH.env ]; then /bin/cp deployment/.env.express.example $DEPLOYPATH.env; fi
+    
+    # Deploy Fastify backend
     - /bin/mkdir -p $FASTIFYPATH
     - /bin/cp -R fastify-backend/* $FASTIFYPATH
+    - if [ ! -f $FASTIFYPATH.env ]; then /bin/cp deployment/.env.fastify.example $FASTIFYPATH.env; fi
+    
+    # Deploy PM2 ecosystem config
+    - /bin/cp deployment/ecosystem.config.js $ROOTPATH
+    
     # Set proper permissions
     - /bin/chmod 755 $DEPLOYPATH
+    - /bin/chmod 755 $FASTIFYPATH
+    - /bin/chmod 600 $DEPLOYPATH.env
+    - /bin/chmod 600 $FASTIFYPATH.env
+    
+    # Restart services (only if they exist)
+    - source $ROOTPATH/nodevenv/freshshare1.3/14/bin/activate && pm2 reload all || echo "PM2 not available or no processes to reload"
