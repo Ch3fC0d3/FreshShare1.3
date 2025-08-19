@@ -13,42 +13,45 @@ This guide explains how to use the GitHub Actions workflow to automatically depl
 
 1. Create a new repository on GitHub (if you don't have one already)
 2. Initialize Git in your local project (if not already done):
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+```
+
 3. Connect your local repository to GitHub:
-   ```bash
-   git remote add origin https://github.com/yourusername/freshshare.git
-   git branch -M main
-   git push -u origin main
-   ```
 
-## Step 2: Set Up GitHub Secrets
+```bash
+git remote add origin https://github.com/yourusername/freshshare.git
+git branch -M main
+git push -u origin main
+```
 
-1. Go to your GitHub repository
-2. Click on "Settings" tab
-3. In the left sidebar, click on "Secrets and variables" → "Actions"
-4. Click "New repository secret"
-5. Add the following secrets:
+## Step 2: Set Up GitHub Workflow Steps
 
-   **FTP Credentials:**
-   - `FTP_SERVER`: Your cPanel server hostname (e.g., `yoursite.com`)
-   - `FTP_USERNAME`: Your cPanel username
-   - `FTP_PASSWORD`: Your cPanel password
+1. **Checkout Code**: Clones the repository
+2. **Setup Node.js**: Installs Node.js 18
+3. **Create Environment Files**: Creates `.env` files for Express and Fastify
+4. **Make Scripts Executable**: Sets permissions for startup scripts
+5. **Verify Scripts Exist**: Checks that required scripts are present
+6. **FTP Deploy to cPanel**: Uploads files to the server
+7. **Post-deployment Restart**: Restarts services on the server
 
-   **JWT Secret:**
-   - `JWT_SECRET`: A strong secret key for JWT authentication
+## Required Secrets
 
-   **MongoDB:**
-   - `MONGODB_URI`: Your MongoDB Atlas connection string
+```plaintext
+FTP_SERVER - Your cPanel server hostname
+FTP_USERNAME - Your cPanel username
+FTP_PASSWORD - Your cPanel password
+MONGODB_URI - MongoDB connection string
+JWT_SECRET - Secret key for JWT authentication
+```
 
 ## Step 3: Verify Workflow File
 
 The workflow file (`.github/workflows/deploy-with-secrets.yml`) should already be configured with:
 
-- PostgreSQL connection string: `postgres://myfrovov_freshshare_user:BjgjX2Vev2vmLwh@localhost:5432/myfrovov_freshshare`
 - Proper environment variable setup
 - FTP deployment configuration
 - SSH commands to restart services
@@ -109,21 +112,88 @@ After the workflow completes successfully:
 ### Application Shows 503 Error After Deployment
 
 1. SSH into your server and check if services are running:
+
    ```bash
    ps aux | grep node
    ```
 2. Check logs for errors:
+
    ```bash
    cat ~/public_html/express.log
    cat ~/fastify-backend/fastify.log
    ```
 3. Manually restart services if needed:
+
    ```bash
    cd ~/fastify-backend
    ./start-fastify.sh > fastify.log 2>&1 &
    
    cd ~/public_html
    ./start-express.sh > express.log 2>&1 &
+   ```
+4. Run the comprehensive diagnostic script:
+   ```bash
+   cd ~/public_html
+   node check-deployment-status.js
+   ```
+5. If services won't start, try the emergency fix:
+   ```bash
+   cd ~/public_html
+   bash comprehensive-503-fix.sh
+   ```
+
+### Preventing 503 Errors in Future Deployments
+
+1. **Update the workflow file** to include health checks after deployment:
+
+   ```yaml
+   # Add this to the end of your deploy-with-secrets.yml file
+   - name: Verify deployment health
+     uses: appleboy/ssh-action@master
+     with:
+       host: ${{ secrets.FTP_SERVER }}
+       username: ${{ secrets.FTP_USERNAME }}
+       password: ${{ secrets.FTP_PASSWORD }}
+       port: 22
+       script: |
+         # Wait for services to fully initialize
+         sleep 10
+         
+         # Check if services are running
+         if ! pgrep -f "node.*server.ts" > /dev/null; then
+           echo "ERROR: Fastify backend not running"
+           cd ~/public_html/fastify-backend
+           ./start-fastify.sh > fastify.log 2>&1 &
+         fi
+         
+         if ! pgrep -f "node server.js" > /dev/null; then
+           echo "ERROR: Express server not running"
+           cd ~/public_html
+           ./start-express.sh > express.log 2>&1 &
+         fi
+         
+         # Run diagnostic script
+         cd ~/public_html
+         node check-deployment-status.js
+   ```
+
+2. **Set up cron jobs** during deployment to ensure automatic restarts:
+
+   ```yaml
+   - name: Configure cron jobs for automatic restart
+     uses: appleboy/ssh-action@master
+     with:
+       host: ${{ secrets.FTP_SERVER }}
+       username: ${{ secrets.FTP_USERNAME }}
+       password: ${{ secrets.FTP_PASSWORD }}
+       port: 22
+       script: |
+         # Set up cron jobs for automatic restart
+         (crontab -l 2>/dev/null || echo "") | grep -v "start-fastify\.sh\|start-express\.sh" | { cat; echo "@reboot ~/public_html/fastify-backend/start-fastify.sh"; } | crontab -
+         (crontab -l 2>/dev/null) | { cat; echo "@reboot sleep 10 && ~/public_html/start-express.sh"; } | crontab -
+         (crontab -l 2>/dev/null) | { cat; echo "*/10 * * * * if ! pgrep -f \"node.*server.ts\" > /dev/null; then cd ~/public_html/fastify-backend && ./start-fastify.sh; fi"; } | crontab -
+         (crontab -l 2>/dev/null) | { cat; echo "*/10 * * * * if ! pgrep -f \"node server.js\" > /dev/null; then cd ~/public_html && ./start-express.sh; fi"; } | crontab -
+         echo "Cron jobs configured for automatic restart"
    ```
 
 ## Making Changes to the Workflow

@@ -3,6 +3,19 @@
 # Startup script for Fastify backend in production environment
 # For use with cPanel Node.js App deployment
 
+# Set environment variables
+export NODE_ENV=production
+export PORT=8080
+
+# Log startup
+echo "Starting Fastify backend..."
+
+# Navigate to the project directory
+cd "$(dirname "$0")"
+
+# Set path to cPanel Node.js
+export PATH=$HOME/nodevenv/freshshare1.3/14/bin:$PATH
+
 # Ensure we're in the correct directory
 cd "$HOME/fastify-backend"
 

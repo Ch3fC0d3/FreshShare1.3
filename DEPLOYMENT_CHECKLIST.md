@@ -1,23 +1,25 @@
-# FreshShare Deployment Checklist
+# FreshShare Deployment Checklist (Node.js-only)
 
 ## Essential Files to Upload
 
-### Express Server (Root Directory)
-- [ ] server.js (Main Express server)
+### Express Server (~/public_html Directory)
+
+- [ ] server.js (Main Express server with proxy configuration)
 - [ ] package.json
 - [ ] package-lock.json
-- [ ] .htaccess (Apache configuration)
-- [ ] .env (Renamed from .env.production)
+- [ ] .env (Environment variables)
 - [ ] start-express.sh (Startup script)
 
-### Fastify Backend (/fastify-backend Directory)
+### Fastify Backend (~/fastify-backend Directory)
+
 - [ ] server.ts (Fastify server)
 - [ ] package.json
 - [ ] package-lock.json
-- [ ] .env (Renamed from .env.production)
+- [ ] .env (Environment variables)
 - [ ] start-fastify.sh (Startup script)
 
 ### Directories to Include
+
 - [ ] public/ (Static assets)
 - [ ] routes/ (Express routes)
 - [ ] controllers/ (Request handlers)
@@ -29,42 +31,65 @@
 ## Pre-Upload Configuration
 
 ### Express Server
+
 - [ ] Update MongoDB Atlas connection string in .env
 - [ ] Set JWT secret to a strong production value
-- [ ] Configure FASTIFY_BACKEND_URL for your hosting environment
+- [ ] Configure FASTIFY_BACKEND_URL to `http://localhost:8080`
+- [ ] Set PORT to 3001
 
 ### Fastify Backend
-- [ ] Update PostgreSQL connection string in .env
-- [ ] Verify PORT is set to 8080 (matches .htaccess and Express config)
+
+- [ ] Update MongoDB connection string in .env
+- [ ] Set JWT secret to the same value as Express server
+- [ ] Verify PORT is set to 8080
 
 ## Hosting Setup
 
 ### cPanel Configuration
-- [ ] Set up Node.js environment (version 18.x)
-- [ ] Create two Node.js applications (Express & Fastify)
-- [ ] Enable required Apache modules (mod_proxy, mod_rewrite)
+
+- [ ] Set up Node.js environment (version 14.x or higher)
+- [ ] Create Node.js application in cPanel (if using cPanel Node.js app)
 - [ ] Set execute permissions on startup scripts:
+      ```bash
+      chmod +x ~/public_html/start-express.sh
+      chmod +x ~/fastify-backend/start-fastify.sh
       ```
-      chmod +x start-express.sh
-      chmod +x fastify-backend/start-fastify.sh
+- [ ] Set up cron jobs for automatic restart:
+      ```bash
+      bash ~/public_html/setup-cron-jobs.sh
       ```
 
 ## Database Setup
+
 - [ ] Create MongoDB Atlas cluster and database
 - [ ] Add your server's IP to MongoDB Atlas whitelist
-- [ ] Set up PostgreSQL database in cPanel or external service
+- [ ] Create necessary collections and indexes
 
 ## Post-Upload Steps
+
 - [ ] Install dependencies:
+      ```bash
+      cd ~/public_html && npm install --production
+      cd ~/fastify-backend && npm install --production
       ```
-      npm install --production
-      cd fastify-backend && npm install --production
+- [ ] Run deployment script or start services manually:
+      ```bash
+      bash ~/public_html/deploy-nodejs-production.sh
       ```
-- [ ] Start Fastify backend first
-- [ ] Start Express server second
 - [ ] Test main site and API endpoints
-- [ ] Check logs for any errors
+- [ ] Check logs for any errors:
+      ```bash
+      tail -f ~/public_html/express.log
+      tail -f ~/fastify-backend/fastify.log
+      ```
+- [ ] Run diagnostic script if needed:
+      ```bash
+      node ~/public_html/diagnose-nodejs-production.js
+      ```
 
 ## Reference Documents
-- [ ] DEPLOYMENT_STEPS.md (Detailed deployment guide)
+
+- [ ] NODEJS_PRODUCTION_SETUP.md (Node.js-only setup guide)
+- [ ] EMERGENCY_FIX_GUIDE.md (Troubleshooting guide)
+- [ ] 503-NODEJS-SOLUTION-SUMMARY.md (503 error fix summary)
 - [ ] DB_SETUP.md (Database setup instructions)
