@@ -10,14 +10,9 @@ export PORT=8080
 # Log startup
 echo "Starting Fastify backend..."
 
-# Navigate to the project directory
-cd "$(dirname "$0")"
-
 # Set path to cPanel Node.js
 export PATH=$HOME/nodevenv/freshshare1.3/14/bin:$PATH
-
-# Ensure we're in the correct directory
-cd "$HOME/fastify-backend"
+echo "Node version: $(node -v)"
 
 # Copy production env file if it exists and .env doesn't
 if [ -f ".env.production" ] && [ ! -f ".env" ]; then
