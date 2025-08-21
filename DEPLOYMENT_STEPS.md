@@ -14,7 +14,9 @@ This guide provides the exact steps to deploy FreshShare to your hosting environ
    - PostgreSQL connection string is correct
    - JWT secret is set to a strong production value
 
-## Deployment Steps
+## Simplified Deployment Steps
+
+This guide provides the exact commands needed to deploy the Node.js-only solution to your production server.
 
 ### Step 1: Upload Files to Hosting
 
