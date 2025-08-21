@@ -4,17 +4,14 @@
 # For use with cPanel Node.js App deployment
 
 # Set environment variables
+cd "$(dirname "$0")"
 export NODE_ENV=production
+export PATH=/opt/cpanel/ea-nodejs18/bin:$PATH
+export NODE_PATH=/opt/cpanel/ea-nodejs18/lib/node_modules
 export PORT=3001
 
 # Log startup
 echo "Starting Express server..."
-
-# Navigate to the project directory
-cd "$(dirname "$0")"
-
-# Set path to cPanel Node.js
-export PATH=$HOME/nodevenv/freshshare1.3/14/bin:$PATH
 
 # Ensure we're in the correct directory
 cd "$HOME/public_html"
@@ -28,10 +25,10 @@ fi
 # Check if node_modules exists, if not install dependencies
 if [ ! -d "node_modules" ]; then
   echo "Installing dependencies..."
-  npm install
+  /opt/cpanel/ea-nodejs18/bin/npm install --production
 fi
 
 # Start the server
-node server.js > express.log 2>&1 &
+/opt/cpanel/ea-nodejs18/bin/node server.js > express.log 2>&1 &
 
 echo "Express server started in background. Check express.log for output."
