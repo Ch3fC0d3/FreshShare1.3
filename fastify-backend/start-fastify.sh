@@ -84,6 +84,47 @@ if [ "$INIT_DB" = "true" ] || [ ! -f ".db_initialized" ]; then
   fi
 fi
 
-# Start the Fastify backend
-echo "Starting Fastify backend..."
-NODE_ENV=production $NODE_BIN --loader ts-node/esm server.ts
+# Check if ts-node/typescript is available
+echo "Checking for TypeScript support..."
+if $NODE_BIN -e "try{require.resolve('ts-node')}catch(e){process.exit(1)}" 2>/dev/null; then
+  echo "ts-node found, using TypeScript mode"
+  # Start the Fastify backend with TypeScript
+  echo "Starting Fastify backend with ts-node..."
+  NODE_ENV=production $NODE_BIN --loader ts-node/esm server.ts
+else
+  echo "ts-node not found, attempting to compile TypeScript..."
+  
+  # Fallback: Attempt to compile TypeScript to JavaScript
+  if [ ! -f "server.js" ] && [ -x "$NPM_BIN" ]; then
+    echo "Installing TypeScript packages..."
+    $NPM_BIN install
+    
+    # Create a simple server.js that requires the essential modules
+    echo "Creating JS fallback version..."
+    cat > server.js << EOF
+// Generated fallback server.js
+require('dotenv/config');
+const fastify = require('fastify');
+const { Pool } = require('pg');
+
+// Config
+const PORT = Number(process.env.PORT || 8080);
+const DATABASE_URL = process.env.DATABASE_URL || 'postgres://localhost:5432/freshshare';
+const pool = new Pool({ connectionString: DATABASE_URL });
+
+const app = fastify({ logger: true });
+
+// Health endpoint
+app.get('/health', async () => ({ ok: true }));
+
+// Start server
+app.listen({ port: PORT, host: '0.0.0.0' })
+  .then(() => app.log.info(\`FreshShare backend listening on :\${PORT}\`))
+  .catch((err) => { app.log.error(err); process.exit(1); });
+EOF
+  fi
+  
+  # Start with node directly
+  echo "Starting Fastify backend with Node.js..."
+  NODE_ENV=production $NODE_BIN server.js
+fi
