@@ -1,18 +1,36 @@
 #!/bin/bash
 # Production startup script with proper process management for Fastify backend
 
-# Print commands as they execute and exit on any error
-set -ex
+set -e
 
-# Set environment
-export NODE_ENV=production
-
-# Get the directory of this script
+# Ensure we run from this script's directory
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-# Kill any existing processes
-pkill -f "node server.js" || echo "No existing processes found"
+# Activate cPanel Node.js environment so cron/manual runs have node in PATH
+if [ -f "$HOME/nodevenv/freshshare1.3/18/bin/activate" ]; then
+  # shellcheck disable=SC1090
+  source "$HOME/nodevenv/freshshare1.3/18/bin/activate"
+else
+  ACTIVATE_FILE=$(find "$HOME/nodevenv" -type f -name activate 2>/dev/null | head -1)
+  if [ -n "$ACTIVATE_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$ACTIVATE_FILE"
+  else
+    for p in "/opt/cpanel/ea-nodejs18/bin" "/opt/cpanel/ea-nodejs20/bin"; do
+      if [ -x "$p/node" ]; then export PATH="$p:$PATH"; fi
+    done
+  fi
+fi
+
+# Resolve node
+NODE_BIN=$(which node 2>/dev/null || true)
+if [ -z "$NODE_BIN" ]; then
+  echo "ERROR: node not found in PATH; cannot start Fastify backend"; exit 1
+fi
+
+# Set environment
+export NODE_ENV=production
 
 # Load environment variables from .env file
 if [ -f ".env" ]; then
@@ -35,7 +53,7 @@ fi
 
 # Start the server in background with proper detachment
 echo "Starting Fastify backend server..."
-node server.js > fastify.log 2>&1 &
+nohup "$NODE_BIN" server.js > fastify.log 2>&1 &
 
 # Save PID
 PID=$!
@@ -61,13 +79,13 @@ if kill -0 $PID 2>/dev/null; then
       cat .server_running
       exit 0
     else
-      echo "ERROR: Server running but didn't create status file. Check logs:"
-      cat fastify.log
+      echo "ERROR: Server running but didn't create status file. Recent logs:"
+      tail -n 200 fastify.log || true
       exit 1
     fi
   fi
 else
-  echo "ERROR: Server failed to start properly. Check logs:"
-  cat fastify.log
+  echo "ERROR: Server failed to start properly. Recent logs:"
+  tail -n 200 fastify.log || true
   exit 1
 fi

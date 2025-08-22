@@ -3,49 +3,49 @@
 # Startup script for Express server in production environment
 # For use with cPanel Node.js App deployment
 
+set -e
+
 # Set environment variables
-cd "$(dirname "$0")"
 export NODE_ENV=production
 export PORT=3001
 
-# Log startup
 echo "Starting Express server..."
 
-# Detect Node.js paths on cPanel
-echo "Detecting Node.js installation..."
-
-# Common cPanel Node.js paths to check
-NODE_PATHS=(
-  "/opt/cpanel/ea-nodejs18/bin"
-  "/opt/cpanel/ea-nodejs20/bin"
-  "/usr/local/bin"
-  "/usr/bin"
-  "$HOME/nodevenv/public_html/18/bin"
-  "$HOME/.nvm/versions/node/v18.*/bin"
-)
-
-NODE_BIN=""
-NPM_BIN=""
-
-for path in "${NODE_PATHS[@]}"; do
-  if [ -f "$path/node" ] && [ -f "$path/npm" ]; then
-    NODE_BIN="$path/node"
-    NPM_BIN="$path/npm"
-    export PATH="$path:$PATH"
-    echo "Found Node.js at: $NODE_BIN"
-    break
+# Activate the cPanel Node.js environment if available
+if [ -f "$HOME/nodevenv/freshshare1.3/18/bin/activate" ]; then
+  # shellcheck disable=SC1090
+  source "$HOME/nodevenv/freshshare1.3/18/bin/activate"
+else
+  ACTIVATE_FILE=$(find "$HOME/nodevenv" -type f -name activate 2>/dev/null | head -1)
+  if [ -n "$ACTIVATE_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$ACTIVATE_FILE"
+  else
+    for p in "/opt/cpanel/ea-nodejs18/bin" "/opt/cpanel/ea-nodejs20/bin"; do
+      if [ -x "$p/node" ]; then export PATH="$p:$PATH"; fi
+    done
   fi
-done
-
-# Fallback to system PATH
-if [ -z "$NODE_BIN" ]; then
-  NODE_BIN=$(which node 2>/dev/null || echo "node")
-  NPM_BIN=$(which npm 2>/dev/null || echo "npm")
-  echo "Using system PATH: $NODE_BIN"
 fi
 
-# Ensure we're in the correct directory
-cd "$HOME/freshshare1.3"
+# Resolve node and npm
+NODE_BIN=$(which node 2>/dev/null || true)
+NPM_BIN=$(which npm 2>/dev/null || true)
+echo "Detected NODE_BIN=${NODE_BIN:-missing}"
+echo "Detected NPM_BIN=${NPM_BIN:-missing}"
+if [ -z "$NODE_BIN" ] || [ -z "$NPM_BIN" ]; then
+  echo "ERROR: node or npm not found in PATH; ensure cPanel Node.js app is activated."; exit 1
+fi
+
+# Determine project root: prefer repositories/FreshShare1.3 if present
+if [ -d "$HOME/repositories/FreshShare1.3" ]; then
+  PROJECT_ROOT="$HOME/repositories/FreshShare1.3"
+elif [ -d "$HOME/freshshare1.3" ]; then
+  PROJECT_ROOT="$HOME/freshshare1.3"
+else
+  echo "ERROR: Could not find project root in ~/repositories/FreshShare1.3 or ~/freshshare1.3"; exit 1
+fi
+echo "Using project root: $PROJECT_ROOT"
+cd "$PROJECT_ROOT"
 
 # Copy production env file if it exists and .env doesn't
 if [ -f ".env.production" ] && [ ! -f ".env" ]; then
@@ -53,13 +53,12 @@ if [ -f ".env.production" ] && [ ! -f ".env" ]; then
   echo "Copied .env.production to .env"
 fi
 
-# Check if node_modules exists, if not install dependencies
+# Install dependencies if missing
 if [ ! -d "node_modules" ]; then
-  echo "Installing dependencies..."
-  $NPM_BIN install --production || echo "npm install failed, continuing..."
+  echo "Installing dependencies with $NPM_BIN..."
+  "$NPM_BIN" install || echo "npm install failed, continuing..."
 fi
 
 # Start the server
-$NODE_BIN server.js > express.log 2>&1 &
-
-echo "Express server started in background. Check express.log for output."
+nohup "$NODE_BIN" server.js > "$PROJECT_ROOT/express.log" 2>&1 &
+echo "Express server started in background (PID $!). Check $PROJECT_ROOT/express.log for output."
