@@ -45,7 +45,7 @@ if [ -z "$NODE_BIN" ]; then
 fi
 
 # Ensure we're in the correct directory
-cd "$HOME/public_html"
+cd "$HOME/freshshare1.3"
 
 # Copy production env file if it exists and .env doesn't
 if [ -f ".env.production" ] && [ ! -f ".env" ]; then
