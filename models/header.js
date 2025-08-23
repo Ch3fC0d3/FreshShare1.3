@@ -124,7 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
   new FreshShareHeader();
 });
 
-// Export for potential future module use
+// Browser-compatible export pattern
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = FreshShareHeader;
+} else if (typeof window !== 'undefined') {
+  // Make available in the global scope for browser environments
+  window.FreshShareHeader = FreshShareHeader;
 }
