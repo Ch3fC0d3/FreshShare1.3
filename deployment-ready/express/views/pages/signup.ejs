@@ -1,0 +1,183 @@
+<div class="main-content">
+    <div class="container">
+        <div class="signup-container">
+            <h1 class="brand-name">FreshShare</h1>
+            <p class="text-center text-muted mb-4">Join our community of food enthusiasts!</p>
+
+            <form id="signupForm">
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <div class="section-title">Personal Information</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="form-section">
+                    <div class="section-title">Location</div>
+                    <div class="form-group">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city">
+                        </div>
+                        <div class="form-group">
+                            <label for="zipCode" class="form-label">Zip Code</label>
+                            <input type="text" class="form-control" id="zipCode">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-signup">Create Account</button>
+                </div>
+
+                <div class="login-link">
+                    Already have an account? <a href="/login">Login here</a>
+                </div>
+            </form>
+
+            <!-- Success Message (Hidden by default) -->
+            <div id="signupSuccess" class="signup-success">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="success-message">Registration Successful!</div>
+                <p class="success-description">Thank you for joining FreshShare. You can now login to your account.</p>
+                <a href="/login" class="btn btn-login">Login Now</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- contentFor('script') %>
+<script src="/js/auth.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Signup page loaded');
+        
+        // Check if we should redirect to a specific page after signup
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect');
+        console.log('Redirect URL:', redirectUrl);
+        
+        // If user is already logged in, redirect to dashboard
+        if (document.cookie.includes('token')) {
+            console.log('User already logged in, redirecting to dashboard');
+            window.location.href = '/dashboard';
+            return;
+        }
+        
+        document.getElementById("signupForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            console.log('Signup form submitted');
+            
+            // Get form values
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            const address = document.getElementById("address").value;
+            const city = document.getElementById("city").value;
+            const zipCode = document.getElementById("zipCode").value;
+            
+            console.log('Form values collected:', { 
+                username, 
+                email, 
+                passwordLength: password ? password.length : 0,
+                confirmPasswordMatch: password === confirmPassword,
+                hasAddress: !!address,
+                hasCity: !!city,
+                hasZipCode: !!zipCode
+            });
+            
+            // Validate password match
+            if (password !== confirmPassword) {
+                console.error('Password mismatch');
+                alert("Passwords do not match!");
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+            submitBtn.disabled = true;
+            
+            try {
+                console.log('Preparing signup request...');
+                const requestBody = {
+                    username,
+                    email,
+                    password,
+                    address,
+                    city,
+                    zipCode,
+                    forceOverwrite: true // Add force overwrite flag for testing
+                };
+                console.log('Request body:', JSON.stringify(requestBody));
+                
+                console.log('Sending signup request to /api/auth/signup...');
+                const response = await fetch("/api/auth/signup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+                
+                console.log('Signup response received');
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    console.log('Signup successful, showing success message');
+                    document.getElementById("signupForm").style.display = "none";
+                    document.getElementById("signupSuccess").style.display = "block";
+                } else {
+                    // Reset button
+                    console.error('Signup failed:', data.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    // Show error message
+                    alert(data.message || "Registration failed. Please try again.");
+                }
+            } catch (error) {
+                console.error("Signup error:", error);
+                console.error("Error details:", error.stack);
+                
+                // Reset button
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                alert("An error occurred. Please try again later.");
+            }
+        });
+    });
+</script>
