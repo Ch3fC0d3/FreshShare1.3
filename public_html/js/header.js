@@ -6,16 +6,17 @@
  * - Scroll behavior
  */
 
+// Browser-only implementation - no require statements
 class FreshShareHeader {
   constructor() {
     // DOM Elements
     this.header = document.querySelector('.fs-header');
-    this.mobileToggle = document.querySelector('#fs-mobile-toggle');
-    this.nav = document.querySelector('#fs-nav');
-    this.navLinks = document.querySelectorAll('.fs-nav-link');
-    this.userProfile = document.querySelector('#fs-user-profile');
-    this.dropdown = document.querySelector('#fs-user-dropdown');
-    this.bars = document.querySelectorAll('.fs-bar');
+    this.mobileToggle = document.querySelector('.fs-mobile-toggle');
+    this.nav = document.querySelector('.fs-nav');
+    this.navLinks = document.querySelectorAll('.fs-nav-links a');
+    this.userProfile = document.querySelector('.fs-auth-buttons');
+    this.dropdown = null; // Will initialize if found
+    this.bars = document.querySelectorAll('.fs-mobile-toggle span');
     this.logoutBtn = document.querySelector('#fs-logout-btn');
     
     // Initialize
