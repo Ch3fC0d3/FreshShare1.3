@@ -19,7 +19,13 @@ import { z } from 'zod';
 // ---------- Config ----------
 const PORT = Number(process.env.PORT || 8080);
 const DATABASE_URL = process.env.DATABASE_URL || 'postgres://localhost:5432/freshshare';
-const pool = new Pool({ connectionString: DATABASE_URL });
+// Some providers require SSL; detect via env or URL parameters
+const USE_SSL = (process.env.DATABASE_SSL || '').toLowerCase() === 'true'
+  || /sslmode=require|ssl=true|sslmode=no-verify/i.test(DATABASE_URL);
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: USE_SSL ? { rejectUnauthorized: false } : undefined,
+});
 
 const app = Fastify({ logger: true });
 

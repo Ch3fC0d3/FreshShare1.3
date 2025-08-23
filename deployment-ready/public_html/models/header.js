@@ -10,13 +10,12 @@ class FreshShareHeader {
   constructor() {
     // DOM Elements
     this.header = document.querySelector('.fs-header');
-    this.mobileToggle = document.querySelector('#fs-mobile-toggle');
-    this.nav = document.querySelector('#fs-nav');
+    this.mobileToggle = document.querySelector('.fs-mobile-toggle');
+    this.nav = document.querySelector('.fs-nav');
     this.navLinks = document.querySelectorAll('.fs-nav-link');
-    this.userProfile = document.querySelector('#fs-user-profile');
-    this.dropdown = document.querySelector('#fs-user-dropdown');
+    this.userProfile = document.querySelector('.fs-user-profile');
+    this.dropdown = document.querySelector('.fs-dropdown');
     this.bars = document.querySelectorAll('.fs-bar');
-    this.logoutBtn = document.querySelector('#fs-logout-btn');
     
     // Initialize
     this.init();
@@ -53,20 +52,6 @@ class FreshShareHeader {
         }
       });
     });
-    
-    // Logout handling
-    if (this.logoutBtn) {
-      this.logoutBtn.addEventListener('click', (e) => {
-        // Optional: Add confirmation dialog
-        if (confirm('Are you sure you want to log out?')) {
-          // Allow default behavior to navigate to logout route
-          return true;
-        } else {
-          e.preventDefault();
-          return false;
-        }
-      });
-    }
   }
   
   toggleMobileMenu() {
@@ -105,9 +90,7 @@ class FreshShareHeader {
   }
   
   handleOutsideClick(e) {
-    if (this.dropdown && this.userProfile && 
-        !this.userProfile.contains(e.target) && 
-        this.dropdown.classList.contains('active')) {
+    if (this.dropdown && !this.userProfile.contains(e.target) && this.dropdown.classList.contains('active')) {
       this.dropdown.classList.remove('active');
     }
   }
@@ -140,3 +123,11 @@ class FreshShareHeader {
 document.addEventListener('DOMContentLoaded', () => {
   new FreshShareHeader();
 });
+
+// Browser-compatible export pattern
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = FreshShareHeader;
+} else if (typeof window !== 'undefined') {
+  // Make available in the global scope for browser environments
+  window.FreshShareHeader = FreshShareHeader;
+}
