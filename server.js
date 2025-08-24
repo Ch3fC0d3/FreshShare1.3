@@ -96,9 +96,22 @@ async function initializeDatabase() {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public_html')));
+// Set explicit MIME types and serve static files
+app.use(express.static(path.join(__dirname, 'public_html'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 // Also serve from public dir for backward compatibility
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 app.use(cookieParser());
 
 // Reverse proxy to Fastify backend (secured)
