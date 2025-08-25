@@ -1,0 +1,19 @@
+# Specific configuration for CSS directory
+<FilesMatch "\.(css)$">
+    # Serve with correct MIME type
+    Header set Content-Type "text/css"
+    # Cache control
+    Header set Cache-Control "max-age=86400"
+    # Allow cross-origin requests
+    Header set Access-Control-Allow-Origin "*"
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+</FilesMatch>
+
+# Compression for CSS files
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/css
+</IfModule>
+
+# Set proper encoding
+AddDefaultCharset UTF-8
