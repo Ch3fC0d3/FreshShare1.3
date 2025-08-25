@@ -53,11 +53,9 @@ if [ -f ".env.production" ] && [ ! -f ".env" ]; then
   echo "Copied .env.production to .env"
 fi
 
-# Install dependencies if missing
-if [ ! -d "node_modules" ]; then
-  echo "Installing dependencies with $NPM_BIN..."
-  "$NPM_BIN" install || echo "npm install failed, continuing..."
-fi
+# Dependency installation is managed by cPanel Node.js App UI.
+# Do NOT run npm install here to avoid CloudLinux nodevenv conflicts.
+echo "Skipping npm install (managed via cPanel UI)."
 
 # Start the server
 nohup "$NODE_BIN" server.js > "$PROJECT_ROOT/express.log" 2>&1 &
