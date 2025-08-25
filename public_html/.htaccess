@@ -1,6 +1,7 @@
-# Specific configuration for CSS directory
-<FilesMatch "\.(css)$">
-    # Serve with correct MIME type
+# Force MIME type for CSS files
+AddType text/css .css
+<FilesMatch "\.css$">
+    ForceType text/css
     Header set Content-Type "text/css"
     # Cache control
     Header set Cache-Control "max-age=86400"
@@ -17,3 +18,27 @@
 
 # Set proper encoding
 AddDefaultCharset UTF-8
+
+# --------------------------------------------
+# URL routing and HTML MIME configuration
+# --------------------------------------------
+
+# Enable rewrite engine
+RewriteEngine On
+RewriteBase /
+
+# Serve existing files and directories directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Proxy API requests to Fastify backend (port 8080)
+RewriteRule ^api/(.*)$ http://localhost:8080/$1 [P,L]
+
+# Proxy all other requests to Express (port 3001)
+RewriteRule ^(.*)$ http://localhost:3001/$1 [P,L]
+
+# Ensure .html is served as HTML
+RemoveHandler .html
+RemoveType .html
+AddType text/html .html
