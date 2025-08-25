@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FreshShare CSS Test Page</title>
+  <!-- Test direct CSS imports -->
+  <link rel="stylesheet" href="/css/reset-styles.css" type="text/css">
+  <link rel="stylesheet" href="/css/color-system.css" type="text/css">
+  <link rel="stylesheet" href="/css/main.css" type="text/css">
+  <link rel="stylesheet" href="/css/design-system.css" type="text/css">
+  <link rel="stylesheet" href="/css/groups-custom.css" type="text/css">
+  
+  <!-- Fallback styles -->
+  <style>
+    .test-box {
+      width: 300px;
+      margin: 20px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+    
+    .styled-if-css-works {
+      font-family: 'Open Sans', Arial, sans-serif;
+      color: #2c3e50;
+      font-weight: bold;
+    }
+    
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="test-box">
+      <h1>CSS Testing Page</h1>
+      <p>This page tests if CSS files are loading correctly.</p>
+    </div>
+    
+    <div class="test-grid">
+      <div class="styled-if-css-works">
+        <h2>CSS Test Elements</h2>
+        <p>These elements should be styled if CSS is working properly.</p>
+        <ul>
+          <li>List item 1</li>
+          <li>List item 2</li>
+          <li>List item 3</li>
+        </ul>
+        <button class="btn btn-primary">Test Button</button>
+      </div>
+      
+      <div>
+        <h2>CSS Path Information</h2>
+        <div id="css-paths"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Display CSS information
+      const cssLinks = document.querySelectorAll('link[rel="stylesheet"]');
+      const cssPathsDiv = document.getElementById('css-paths');
+      
+      cssLinks.forEach(function(link) {
+        const path = link.getAttribute('href');
+        const p = document.createElement('p');
+        
+        // Fetch to check if file exists
+        fetch(path)
+          .then(response => {
+            if (response.ok) {
+              p.innerHTML = `✅ <strong>${path}</strong>: Loaded successfully`;
+            } else {
+              p.innerHTML = `❌ <strong>${path}</strong>: Failed (${response.status})`;
+              p.style.color = 'red';
+            }
+          })
+          .catch(error => {
+            p.innerHTML = `❌ <strong>${path}</strong>: Error (${error.message})`;
+            p.style.color = 'red';
+          });
+        
+        cssPathsDiv.appendChild(p);
+      });
+      
+      // Add browser information
+      const browserInfo = document.createElement('div');
+      browserInfo.innerHTML = `
+        <h3>Browser Information</h3>
+        <p>User Agent: ${navigator.userAgent}</p>
+        <p>Location: ${window.location.href}</p>
+      `;
+      document.body.appendChild(browserInfo);
+    });
+  </script>
+</body>
+</html>

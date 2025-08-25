@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Test</title>
+  <!-- Direct CSS imports to test -->
+  <link rel="stylesheet" href="/css/reset-styles.css">
+  <link rel="stylesheet" href="/css/color-system.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/design-system.css">
+  <link rel="stylesheet" href="/css/groups-custom.css">
+  
+  <!-- Inline styles for verification -->
+  <style>
+    .test-box {
+      width: 200px;
+      height: 200px;
+      margin: 20px;
+      padding: 20px;
+      border: 3px solid blue;
+      background-color: lightblue;
+    }
+    
+    .path-display {
+      font-family: monospace;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>CSS Test Page</h1>
+  
+  <div class="test-box">
+    <p>This box should be visible if inline CSS is working</p>
+  </div>
+  
+  <h2>CSS File Paths Verification:</h2>
+  <div id="path-info"></div>
+  
+  <h2>CSS Load Status:</h2>
+  <ul id="css-status"></ul>
+
+  <script>
+    // Display the actual paths of CSS files
+    document.addEventListener('DOMContentLoaded', function() {
+      const links = document.querySelectorAll('link[rel="stylesheet"]');
+      const pathInfo = document.getElementById('path-info');
+      const cssStatus = document.getElementById('css-status');
+      
+      links.forEach(link => {
+        // Display the href
+        const path = document.createElement('div');
+        path.className = 'path-display';
+        path.textContent = `${link.href}`;
+        pathInfo.appendChild(path);
+        
+        // Check if the CSS loaded
+        fetch(link.href)
+          .then(response => {
+            const listItem = document.createElement('li');
+            if (response.ok) {
+              listItem.textContent = `✅ ${link.href.split('/').pop()} loaded successfully`;
+              listItem.style.color = 'green';
+            } else {
+              listItem.textContent = `❌ ${link.href.split('/').pop()} failed: ${response.status} ${response.statusText}`;
+              listItem.style.color = 'red';
+            }
+            cssStatus.appendChild(listItem);
+          })
+          .catch(error => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `❌ ${link.href.split('/').pop()} error: ${error.message}`;
+            listItem.style.color = 'red';
+            cssStatus.appendChild(listItem);
+          });
+      });
+      
+      // Log environment info
+      console.log('Document location:', window.location.href);
+      console.log('Base URL:', document.baseURI);
+    });
+  </script>
+</body>
+</html>
