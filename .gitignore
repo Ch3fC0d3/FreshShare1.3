@@ -37,14 +37,14 @@ public/uploads/*.m4v
 *.gif
 *.bmp
 *.tiff
-*.ico
+# Allowing favicon.ico
 public/uploads/*.jpg
 public/uploads/*.jpeg
 public/uploads/*.png
 public/uploads/*.gif
 public/uploads/*.bmp
 public/uploads/*.tiff
-public/uploads/*.ico
+# public/uploads/*.ico
 
 # OS generated files
 .DS_Store
