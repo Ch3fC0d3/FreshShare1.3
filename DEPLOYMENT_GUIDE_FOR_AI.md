@@ -58,6 +58,15 @@ The workflow (`deploy-with-secrets-fixed.yml`) performs these key steps:
 
 ## Critical Components
 
+### Base URL Configuration
+
+The application now supports deployment in both root path (`/`) and subdirectory path (`/subdirectory`) configurations through the `BASE_URL` environment variable:
+
+- For root deployment: `BASE_URL=''` (empty string)
+- For subdirectory deployment: `BASE_URL='/subdirectory'` (path with leading slash)
+
+This variable is used throughout the application to correctly generate URLs for links, assets, and API calls. Always set this variable to match your actual deployment path.
+
 ### Environment Configuration
 ```
 # Express .env
@@ -66,6 +75,7 @@ NODE_ENV=production
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/freshshare
 JWT_SECRET=your-jwt-secret-key
 FASTIFY_BACKEND_URL=http://localhost:8080
+BASE_URL=/subdirectory  # Use '' for root deployment or '/subdirectory' for subdirectory path
 
 # Fastify .env  
 PORT=8080
@@ -132,6 +142,7 @@ Environment files (.env) are created dynamically during the workflow execution, 
     echo "PORT=3001" >> .env
     echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
     echo "FASTIFY_BACKEND_URL=http://localhost:8080" >> .env
+    echo "BASE_URL=${{ secrets.BASE_URL || '' }}" >> .env
     echo "NODE_ENV=production" >> .env
 ```
 

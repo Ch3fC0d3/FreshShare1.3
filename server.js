@@ -12,7 +12,8 @@ const authJwt = require('./middleware/authJwt');
 const querystring = require('querystring');
 
 // Configure base URL for deployment in subdirectories
-const BASE_URL = process.env.BASE_URL || '';
+// Convert '/' to empty string for root deployment
+const BASE_URL = process.env.BASE_URL === '/' ? '' : (process.env.BASE_URL || '');
 
 // Custom error logging to a public file
 const logErrorToFile = (error) => {
