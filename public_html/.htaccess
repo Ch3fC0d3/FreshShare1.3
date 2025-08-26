@@ -1,5 +1,13 @@
-# Force MIME type for CSS files
+# MIME Types for different file types
 AddType text/css .css
+AddType text/javascript .js
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png
+AddType image/svg+xml .svg
+AddType image/gif .gif
+AddType image/webp .webp
+
+# Force CSS MIME type to avoid browser rejection
 <FilesMatch "\.css$">
     ForceType text/css
     Header set Content-Type "text/css"
@@ -11,34 +19,44 @@ AddType text/css .css
     Header always set X-Content-Type-Options "nosniff"
 </FilesMatch>
 
-# Compression for CSS files
+# Force JavaScript MIME type
+<FilesMatch "\.js$">
+    ForceType text/javascript
+    Header set Content-Type "text/javascript"
+</FilesMatch>
+
+# Force HTML MIME type
+<FilesMatch "\.html$">
+    ForceType text/html
+    Header set Content-Type "text/html"
+</FilesMatch>
+
+# Compression for text files
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/css text/html text/javascript application/javascript
 </IfModule>
 
 # Set proper encoding
 AddDefaultCharset UTF-8
 
 # --------------------------------------------
-# URL routing and HTML MIME configuration
+# URL routing configuration
 # --------------------------------------------
 
 # Enable rewrite engine
 RewriteEngine On
 RewriteBase /
 
-# Serve existing files and directories directly
+# Serve existing files directly (CSS, JS, images, etc)
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
+
+# Handle static asset paths (for both /css/ and /public_html/css/ patterns)
+RewriteRule ^public_html/(.*)$ /$1 [R=301,L]
 
 # Proxy API requests to Fastify backend (port 8080)
 RewriteRule ^api/(.*)$ http://localhost:8080/$1 [P,L]
 
 # Proxy all other requests to Express (port 3001)
 RewriteRule ^(.*)$ http://localhost:3001/$1 [P,L]
-
-# Ensure .html is served as HTML
-RemoveHandler .html
-RemoveType .html
-AddType text/html .html

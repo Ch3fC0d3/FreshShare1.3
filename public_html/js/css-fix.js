@@ -1,6 +1,6 @@
 // CSS Fix Script for Production Environment
 (function() {
-  console.log('CSS Fix Script loaded');
+  console.log('CSS Fix Script loaded v1.1');
   
   // Run after DOM content is loaded
   document.addEventListener('DOMContentLoaded', function() {
@@ -15,8 +15,24 @@
       'groups-custom.css'
     ];
     
-    // Base URL
-    const baseUrl = window.location.origin;
+    // Detect base URL - check if we're running under a subdirectory
+    const basePathElements = window.location.pathname.split('/');
+    let basePath = '';
+    // If pathname has a specific structure like /mysite/page.html,
+    // we might need to prepend /mysite to all relative URLs
+    if (basePathElements.length > 2 && basePathElements[1] !== '') {
+      basePath = '/' + basePathElements[1];
+      console.log('Detected base path:', basePath);
+    }
+    
+    // Store base URL for global use
+    window.fsBaseUrl = basePath;
+    
+    // Set base URL as data attribute on html element for EJS to access
+    document.documentElement.setAttribute('data-base-url', basePath);
+    
+    // Base URL for origins
+    const originUrl = window.location.origin;
     
     // Check if CSS is properly styled by checking computed styles
     const bodyStyles = window.getComputedStyle(document.body);
@@ -60,12 +76,15 @@
     function reloadCSSFiles() {
       // Create new link elements with full paths and cache-busting
       cssFiles.forEach(file => {
-        // Try multiple paths to ensure loading
+        // Try multiple paths to ensure loading, using the detected base path
+        const cacheBuster = Date.now();
         const paths = [
-          `/css/${file}?t=${Date.now()}`,
-          `${baseUrl}/css/${file}?t=${Date.now()}`,
-          `${baseUrl}/public_html/css/${file}?t=${Date.now()}`,
-          `${baseUrl}/public/css/${file}?t=${Date.now()}`
+          `${basePath}/css/${file}?t=${cacheBuster}`,
+          `${basePath}/public_html/css/${file}?t=${cacheBuster}`,
+          `${basePath}/public/css/${file}?t=${cacheBuster}`,
+          `${originUrl}${basePath}/css/${file}?t=${cacheBuster}`,
+          `${originUrl}${basePath}/public_html/css/${file}?t=${cacheBuster}`,
+          `/css/${file}?t=${cacheBuster}` // Fallback to root-relative path
         ];
         
         // Try each path

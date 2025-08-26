@@ -14,13 +14,16 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     
-    <!-- Base Styles with cache-busting and multiple loading strategies -->
-    <% const cacheBuster = Date.now(); %>
-    <link rel="stylesheet" href="/css/reset-styles.css?v=<%= cacheBuster %>" type="text/css">
-    <link rel="stylesheet" href="/css/color-system.css?v=<%= cacheBuster %>" type="text/css">
-    <link rel="stylesheet" href="/css/main.css?v=<%= cacheBuster %>" type="text/css">
-    <link rel="stylesheet" href="/css/design-system.css?v=<%= cacheBuster %>" type="text/css">
-    <link rel="stylesheet" href="/css/groups-custom.css?v=<%= cacheBuster %>" type="text/css">
+    <!-- Base URL configuration for consistent asset paths -->
+    <% 
+    const baseUrl = ''; // Empty string for relative URLs
+    const cacheBuster = Date.now(); 
+    %>
+    <link rel="stylesheet" href="<%= baseUrl %>/css/reset-styles.css?v=<%= cacheBuster %>" type="text/css">
+    <link rel="stylesheet" href="<%= baseUrl %>/css/color-system.css?v=<%= cacheBuster %>" type="text/css">
+    <link rel="stylesheet" href="<%= baseUrl %>/css/main.css?v=<%= cacheBuster %>" type="text/css">
+    <link rel="stylesheet" href="<%= baseUrl %>/css/design-system.css?v=<%= cacheBuster %>" type="text/css">
+    <link rel="stylesheet" href="<%= baseUrl %>/css/groups-custom.css?v=<%= cacheBuster %>" type="text/css">
     
     <!-- Inline critical CSS for immediate styling -->
     <style>
