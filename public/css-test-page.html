@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Test Page - Public Directory</title>
+    
+    <!-- Test CSS imports from public directory -->
+    <link rel="stylesheet" href="/css/reset-styles.css" type="text/css">
+    <link rel="stylesheet" href="/css/color-system.css" type="text/css">
+    <link rel="stylesheet" href="/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/css/design-system.css" type="text/css">
+    <link rel="stylesheet" href="/css/groups-custom.css" type="text/css">
+    
+    <!-- Test JS imports -->
+    <script src="/js/css-fix.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>CSS Test Page - Public Directory</h1>
+        
+        <div class="test-section">
+            <h2>Testing CSS Files Loading</h2>
+            <p>This page tests if CSS files are loading properly from the consolidated directory structure.</p>
+            
+            <h3>Testing Color System</h3>
+            <div class="color-blocks">
+                <div class="color-block primary-color">Primary Color</div>
+                <div class="color-block secondary-color">Secondary Color</div>
+                <div class="color-block accent-color">Accent Color</div>
+            </div>
+            
+            <h3>Testing Components</h3>
+            <div class="component-tests">
+                <button class="fs-btn fs-btn-primary">Primary Button</button>
+                <button class="fs-btn fs-btn-secondary">Secondary Button</button>
+                <div class="fs-card">
+                    <div class="fs-card-header">Card Header</div>
+                    <div class="fs-card-body">Card Content</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-results">
+            <h2>Test Results</h2>
+            <ul id="test-results-list">
+                <!-- Results will be populated by JavaScript -->
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultsList = document.getElementById('test-results-list');
+            const cssFiles = [
+                'reset-styles.css',
+                'color-system.css',
+                'main.css',
+                'design-system.css',
+                'groups-custom.css'
+            ];
+            
+            // Check if CSS files are loaded
+            cssFiles.forEach(file => {
+                const isLoaded = Array.from(document.styleSheets).some(sheet => {
+                    return sheet.href && sheet.href.includes(file);
+                });
+                
+                const listItem = document.createElement('li');
+                listItem.textContent = `${file}: ${isLoaded ? 'Loaded ✅' : 'Failed to load ❌'}`;
+                listItem.className = isLoaded ? 'success' : 'failure';
+                resultsList.appendChild(listItem);
+            });
+            
+            // Check for CSS-fix.js
+            const jsLoaded = document.querySelector('script[src*="css-fix.js"]') !== null;
+            const jsListItem = document.createElement('li');
+            jsListItem.textContent = `css-fix.js: ${jsLoaded ? 'Loaded ✅' : 'Failed to load ❌'}`;
+            jsListItem.className = jsLoaded ? 'success' : 'failure';
+            resultsList.appendChild(jsListItem);
+        });
+    </script>
+    
+    <style>
+        /* Inline styles for the test page only */
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .color-blocks {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .color-block {
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+        }
+        
+        .primary-color {
+            background-color: var(--fs-primary-color, #3498db);
+        }
+        
+        .secondary-color {
+            background-color: var(--fs-secondary-color, #2ecc71);
+        }
+        
+        .accent-color {
+            background-color: var(--fs-accent-color, #e74c3c);
+        }
+        
+        .component-tests {
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .test-results {
+            margin-top: 30px;
+        }
+        
+        .test-results ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .test-results li {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .failure {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</body>
+</html>

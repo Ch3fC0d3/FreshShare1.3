@@ -7,6 +7,13 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const config = require('./config/auth.config');
 require('dotenv').config();
+
+// Exit on missing JWT secret in production
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('FATAL ERROR: JWT_SECRET is not defined in the environment.');
+  process.exit(1);
+}
+
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const authJwt = require('./middleware/authJwt');
 const querystring = require('querystring');
@@ -55,35 +62,38 @@ if (process.env.MONGODB_URI) {
 }
 
 // Connect to MongoDB with better error handling
-console.log('Attempting to connect to MongoDB...', {
-  connectionString: connectionURL ? 'Configured' : 'Missing',
-  usingAtlas: !!(process.env.MONGODB_URI || process.env.MONGODB_HOST)
-});
-
-mongoose.connect(connectionURL, dbConfig.options)
-  .then(() => {
-    console.log('Successfully connected to MongoDB.');
-    initializeDatabase();
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    logErrorToFile(err);
-    // process.exit(1); // Commented out to prevent server crash on DB connection failure
+if (process.env.NODE_ENV !== 'test') {
+  console.log('Attempting to connect to MongoDB...', {
+    connectionString: connectionURL ? 'Configured' : 'Missing',
+    usingAtlas: !!(process.env.MONGODB_URI || process.env.MONGODB_HOST),
   });
+
+  mongoose
+    .connect(connectionURL, dbConfig.options)
+    .then(() => {
+      console.log('Successfully connected to MongoDB.');
+      initializeDatabase();
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
+      logErrorToFile(err);
+      // process.exit(1); // Commented out to prevent server crash on DB connection failure
+    });
+}
 
 // Initialize database with roles if needed
 async function initializeDatabase() {
   try {
     const db = require('./models');
     const Role = db.role;
-    
+
     const count = await Role.estimatedDocumentCount();
-    
+
     if (count === 0) {
       await Promise.all([
-        new Role({ name: "user" }).save(),
-        new Role({ name: "moderator" }).save(),
-        new Role({ name: "admin" }).save()
+        new Role({ name: 'user' }).save(),
+        new Role({ name: 'moderator' }).save(),
+        new Role({ name: 'admin' }).save(),
       ]);
       console.log('Added roles to database');
     }
@@ -97,25 +107,31 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Set explicit MIME types and serve static files
-app.use(express.static(path.join(__dirname, 'public_html'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
-// Also serve from public dir for backward compatibility
-app.use(express.static(path.join(__dirname, 'public'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
+// Serve static files from public directory first (primary)
+app.use(
+  express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      }
+    },
+  })
+);
+// Also serve from public_html dir for backward compatibility
+app.use(
+  express.static(path.join(__dirname, 'public_html'), {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      }
+    },
+  })
+);
 app.use(cookieParser());
 
 // Reverse proxy to Fastify backend (secured)
-const FASTIFY_BACKEND_URL = process.env.FASTIFY_BACKEND_URL || 'http://localhost:8089';
+const FASTIFY_BACKEND_URL =
+  process.env.FASTIFY_BACKEND_URL || 'http://localhost:8089';
 app.use(
   '/api/pack',
   authJwt.verifyToken,
@@ -143,20 +159,28 @@ app.use(
     onError: (err, req, res) => {
       console.error('Proxy error:', err.message);
       if (!res.headersSent) {
-        res.status(502).json({ success: false, message: 'Upstream service unavailable' });
+        res
+          .status(502)
+          .json({ success: false, message: 'Upstream service unavailable' });
       }
-    }
+    },
   })
 );
 
 // Content Security Policy middleware
 app.use((req, res, next) => {
-  // In development, allow 'unsafe-eval' for easier debugging
-  // In production, this should be more restrictive
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self';"
-  );
+  // A strict CSP is essential for security.
+  // 'unsafe-inline' and 'unsafe-eval' have been removed from script-src to mitigate XSS attacks.
+  // This may require changes to the frontend to move inline scripts and styles to separate files.
+  // 'unsafe-inline' is temporarily kept for style-src to avoid breaking styles, but should also be removed in the long term.
+  const csp =
+    "default-src 'self'; " +
+    "script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " +
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
+    "img-src 'self' data: blob:; " +
+    "font-src 'self' data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.gstatic.com; " +
+    "connect-src 'self';";
+  res.setHeader('Content-Security-Policy', csp);
   next();
 });
 
@@ -172,9 +196,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
+
+const setUserFromToken = async (req, res, next) => {
+  if (req.userId) {
+    try {
+      const User = require('./models/user.model');
+      const user = await User.findById(req.userId).select('-password');
+      if (user) {
+        res.locals.user = user;
+      }
+    } catch (error) {
+      console.error('Error fetching user from token:', error);
+    }
+  }
+  next();
+};
 
 // Ensure uploads directory exists
 const fs = require('fs');
@@ -190,44 +229,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layouts/layout');
 
 // Authentication middleware for views
-app.use(async (req, res, next) => {
-  try {
-    // Get token from various sources
-    const token = req.headers.authorization?.split(' ')[1] || 
-                 req.cookies?.token || 
-                 req.query?.token;
-
-    if (token) {
-      try {
-        // Verify token using the same secret as in auth.controller.js
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'freshShare-auth-secret');
-        const User = require('./models/user.model');
-        const user = await User.findById(decoded.id).select('-password');
-        
-        if (user) {
-          // Add user data to locals for all views
-          res.locals.user = user;
-          console.log('User authenticated:', user.username, 'ID:', user._id); // Enhanced debug log
-        } else {
-          console.log('Token valid but user not found in database');
-          res.clearCookie('token'); // Clear token if user doesn't exist
-        }
-      } catch (err) {
-        console.error('Token verification failed:', err);
-        res.clearCookie('token'); // Clear invalid token
-      }
-    } else {
-      console.log('No authentication token found');
-    }
-    next();
-  } catch (err) {
-    console.error('Auth middleware error:', err);
-    next();
-  }
-});
+app.use(authJwt.optionalAuth, setUserFromToken);
 
 // API Routes with error handling
-const wrapAsync = fn => (req, res, next) => {
+const wrapAsync = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
@@ -255,84 +260,86 @@ app.get('/health', (req, res) => {
   if (dbState === 1) {
     res.status(200).json({ status: 'ok', database: 'connected' });
   } else {
-    res.status(503).json({ status: 'error', database: 'disconnected', readyState: dbState });
+    res
+      .status(503)
+      .json({ status: 'error', database: 'disconnected', readyState: dbState });
   }
 });
 
 // Page Routes
 app.get('/', (req, res) => {
-  res.render('pages/index', { 
-    title: 'FreshShare - Home'
+  res.render('pages/index', {
+    title: 'FreshShare - Home',
   });
 });
 
 app.get('/marketplace', (req, res) => {
-  res.render('pages/marketplace', { 
-    title: 'FreshShare - Marketplace'
+  res.render('pages/marketplace', {
+    title: 'FreshShare - Marketplace',
   });
 });
 
 app.get('/create-listing', (req, res) => {
-  res.render('pages/create-listing', { 
-    title: 'FreshShare - Create Listing'
+  res.render('pages/create-listing', {
+    title: 'FreshShare - Create Listing',
   });
 });
 
 app.get('/forum', (req, res) => {
-  res.render('pages/forum', { 
-    title: 'FreshShare - Forum'
+  res.render('pages/forum', {
+    title: 'FreshShare - Forum',
   });
 });
 
 app.get('/groups', (req, res) => {
-  res.render('pages/groups', { 
-    title: 'FreshShare - Groups'
+  res.render('pages/groups', {
+    title: 'FreshShare - Groups',
   });
 });
 
 app.get('/create-group', (req, res) => {
-  res.render('pages/create-group', { 
-    title: 'FreshShare - Create New Group'
+  res.render('pages/create-group', {
+    title: 'FreshShare - Create New Group',
   });
 });
 
 app.get('/group-details', (req, res) => {
-  res.render('pages/group-details', { 
+  res.render('pages/group-details', {
     title: 'FreshShare - Group Details',
-    groupId: req.query.id
+    groupId: req.query.id,
   });
 });
 
 app.get('/groups/:id/shopping', (req, res) => {
-  res.render('pages/group_shopping', { 
+  res.render('pages/group_shopping', {
     title: 'FreshShare - Group Shopping',
-    groupId: req.params.id
+    groupId: req.params.id,
   });
 });
 
 app.get('/groups/:id/orders', (req, res) => {
-  res.render('pages/group_orders', { 
+  res.render('pages/group_orders', {
     title: 'FreshShare - Group Orders',
-    groupId: req.params.id
+    groupId: req.params.id,
   });
 });
 
 app.get('/orders/:id', (req, res) => {
-  res.render('pages/order_details', { 
+  res.render('pages/order_details', {
     title: 'FreshShare - Order Details',
-    orderId: req.params.id
+    orderId: req.params.id,
   });
 });
 
 app.get('/about', (req, res) => {
-  res.render('pages/about', { 
-    title: 'FreshShare - About'
+  res.render('pages/about', {
+    title: 'FreshShare - About',
   });
 });
 
 app.get('/contact', (req, res) => {
-  res.render('pages/contact', { 
-    title: 'FreshShare - Contact'
+  res.render('pages/contact', {
+    title: 'FreshShare - Contact',
   });
 });
 
@@ -340,19 +347,26 @@ app.get('/profile', async (req, res) => {
   try {
     // Check if user is logged in
     if (!res.locals.user) {
-      console.log('Profile access attempted without authentication, redirecting to login');
-      return res.redirect('/login?redirect=/profile&error=' + encodeURIComponent('Please log in to view your profile'));
+      console.log(
+        'Profile access attempted without authentication, redirecting to login'
+      );
+      return res.redirect(
+        '/login?redirect=/profile&error=' +
+          encodeURIComponent('Please log in to view your profile')
+      );
     }
 
     // User is logged in, use their data
     const userData = res.locals.user;
-    console.log(`Rendering profile page for user: ${userData.username} (${userData._id})`);
+    console.log(
+      `Rendering profile page for user: ${userData.username} (${userData._id})`
+    );
 
     // Add debug information
     console.log('User data available:', {
       id: userData._id,
       username: userData.username,
-      email: userData.email
+      email: userData.email,
     });
 
     // Ensure userData is properly formatted for the template
@@ -362,26 +376,27 @@ app.get('/profile', async (req, res) => {
       email: userData.email,
       firstName: userData.firstName || '',
       lastName: userData.lastName || '',
-      profileImage: userData.profileImage || '/assets/images/avatar-placeholder.jpg',
+      profileImage:
+        userData.profileImage || '/assets/images/avatar-placeholder.jpg',
       location: {
         street: userData.location?.street || '',
         city: userData.location?.city || '',
         state: userData.location?.state || '',
-        zipCode: userData.location?.zipCode || ''
+        zipCode: userData.location?.zipCode || '',
       },
-      phoneNumber: userData.phoneNumber || ''
+      phoneNumber: userData.phoneNumber || '',
     };
 
     // Render the profile page with the user data
     res.render('pages/profile', {
       title: 'FreshShare - Profile',
-      user: formattedUserData
+      user: formattedUserData,
     });
   } catch (error) {
     console.error('Profile page error:', error);
     res.status(500).render('error', {
       title: 'Error',
-      message: 'Failed to load profile page: ' + error.message
+      message: 'Failed to load profile page: ' + error.message,
     });
   }
 });
@@ -392,27 +407,27 @@ app.get('/profile-edit', async (req, res) => {
     if (!res.locals.user) {
       return res.redirect('/login');
     }
-    
+
     // Use the user data from locals
     const userData = res.locals.user;
 
     res.render('pages/profile-edit', {
       title: 'FreshShare - Edit Profile',
-      user: userData
+      user: userData,
     });
   } catch (error) {
     console.error('Profile edit page error:', error);
     res.status(500).render('error', {
       title: 'Error',
-      message: 'Failed to load profile edit page'
+      message: 'Failed to load profile edit page',
     });
   }
 });
 
 app.get('/dashboard', (req, res) => {
   // Always render dashboard; client will fetch data and handle auth redirects
-  res.render('pages/dashboard', { 
-    title: 'FreshShare - Dashboard'
+  res.render('pages/dashboard', {
+    title: 'FreshShare - Dashboard',
   });
 });
 
@@ -420,8 +435,8 @@ app.get('/login', (req, res) => {
   if (res.locals.user) {
     return res.redirect('/dashboard');
   }
-  res.render('pages/login', { 
-    title: 'FreshShare - Login'
+  res.render('pages/login', {
+    title: 'FreshShare - Login',
   });
 });
 
@@ -429,8 +444,8 @@ app.get('/signup', (req, res) => {
   if (res.locals.user) {
     return res.redirect('/dashboard');
   }
-  res.render('pages/signup', { 
-    title: 'FreshShare - Sign Up'
+  res.render('pages/signup', {
+    title: 'FreshShare - Sign Up',
   });
 });
 
@@ -439,7 +454,11 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Start server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
