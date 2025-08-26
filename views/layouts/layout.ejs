@@ -71,52 +71,7 @@
       }
     </style>
     
-    <!-- Load CSS with multiple approaches for production compatibility -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Try all possible CSS file locations
-        const cssFiles = [
-          'reset-styles.css',
-          'color-system.css',
-          'main.css',
-          'design-system.css',
-          'groups-custom.css'
-        ];
-        
-        const baseUrl = window.location.origin;
-        const timestamp = new Date().getTime();
-        
-        // Try loading CSS with alternative paths if styles don't appear to be applied
-        setTimeout(function() {
-          // Simple check if styling is applied - look for computed styles
-          const body = document.body;
-          const bodyStyle = window.getComputedStyle(body);
-          const fontFamily = bodyStyle.fontFamily;
-          const bgColor = bodyStyle.backgroundColor;
-          
-          // If default browser styling is still present, try alternative paths
-          if (fontFamily.includes('serif') || bgColor === 'rgba(0, 0, 0, 0)') {
-            console.log('Applying CSS fallback mechanisms...');
-            
-            cssFiles.forEach(function(file) {
-              // Try multiple path strategies
-              [
-                baseUrl + '/css/' + file,
-                baseUrl + '/public_html/css/' + file,
-                baseUrl + '/public/css/' + file
-              ].forEach(function(path) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.type = 'text/css';
-                link.href = path + '?nocache=' + timestamp;
-                document.head.appendChild(link);
-                console.log('Loaded fallback CSS: ' + path);
-              });
-            });
-          }
-        }, 500); // Small delay to check if initial CSS loaded
-      });
-    </script>
+    <!-- CSS is loaded directly and with the external css-fix.js script -->
     
     <!-- Custom Styles -->
     <style>
