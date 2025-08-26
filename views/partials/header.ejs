@@ -1,37 +1,37 @@
 <header class="fs-header">
-    <div class="fs-header-container">
-        <div class="fs-logo">
-            <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/">
-                <i class="fa-solid fa-seedling"></i>
-                <span class="fs-logo-text">Fresh<span class="fs-logo-highlight">Share</span></span>
-            </a>
-        </div>
-        
-        <nav class="fs-nav">
-            <div class="fs-nav-links">
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/marketplace">Marketplace</a>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/groups">Groups</a>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/forum">Forum</a>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/dashboard">Dashboard</a>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/profile">Profile</a>
-                <a href="https://ch3fc0d3.github.io/Ksea/" target="_blank"><i class="fa-solid fa-wallet"></i> Wallet</a>
-            </div>
-        </nav>
-        
-        <div class="fs-auth-buttons">
-            <% if (locals.user) { %>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/dashboard" class="fs-btn fs-btn-primary">Dashboard</a>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/logout" class="fs-btn fs-btn-secondary">Logout</a>
-            <% } else { %>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/login" class="fs-btn fs-btn-primary">Login</a>
-                <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/signup" class="fs-btn fs-btn-secondary">Sign Up</a>
-            <% } %>
-        </div>
-        
-        <button class="fs-mobile-toggle">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
+  <div class="fs-header-container">
+    <div class="fs-logo">
+      <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/">
+        <i class="fa-solid fa-seedling"></i>
+        <span class="fs-logo-text">Fresh<span class="fs-logo-highlight">Share</span></span>
+      </a>
     </div>
+
+    <nav class="fs-nav">
+      <div class="fs-nav-links">
+        <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/marketplace">Marketplace</a>
+        <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/groups">Groups</a>
+        <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/forum">Forum</a>
+        <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/dashboard">Dashboard</a>
+        <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/profile">Profile</a>
+        <a href="https://ch3fc0d3.github.io/Ksea/" target="_blank"><i class="fa-solid fa-wallet"></i> Wallet</a>
+      </div>
+    </nav>
+
+    <div class="fs-auth-buttons">
+      <% if (locals.user) { %>
+      <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/dashboard" class="fs-btn fs-btn-primary">Dashboard</a>
+      <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/logout" class="fs-btn fs-btn-secondary">Logout</a>
+      <% } else { %>
+      <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/login" class="fs-btn fs-btn-primary">Login</a>
+      <a href="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/signup" class="fs-btn fs-btn-secondary">Sign Up</a>
+      <% } %>
+    </div>
+
+    <button class="fs-mobile-toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
 </header>
