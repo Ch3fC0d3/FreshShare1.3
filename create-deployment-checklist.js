@@ -86,4 +86,6 @@ const checklistContent = `# FreshShare Deployment Checklist
 fs.writeFileSync(outputFile, checklistContent);
 
 console.log(`Deployment checklist created at: ${outputFile}`);
-console.log('Follow this checklist to manually prepare and upload your deployment package.');
+console.log(
+  'Follow this checklist to manually prepare and upload your deployment package.'
+);

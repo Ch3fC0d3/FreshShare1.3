@@ -15,7 +15,7 @@ try {
   require('./server.ts');
 } catch (e) {
   console.log('Failed to start with local ts-node:', e.message);
-  
+
   try {
     // Method 2: Use child process to run npx ts-node
     console.log('Trying with npx ts-node...');
@@ -23,7 +23,7 @@ try {
       cwd: __dirname,
       stdio: 'inherit',
       shell: true,
-      env: { ...process.env }
+      env: { ...process.env },
     });
 
     child.on('error', (err) => {
@@ -33,7 +33,7 @@ try {
     });
   } catch (spawnError) {
     console.error('Failed to spawn ts-node process:', spawnError);
-    
+
     console.log('\nALTERNATIVE SOLUTION:');
     console.log('1. Run the server using ts-node manually:');
     console.log('   cd fastify-backend');

@@ -8,7 +8,8 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3003;
-const FASTIFY_BACKEND_URL = process.env.FASTIFY_BACKEND_URL || 'http://localhost:8089';
+const FASTIFY_BACKEND_URL =
+  process.env.FASTIFY_BACKEND_URL || 'http://localhost:8089';
 
 // Basic middleware
 app.use(express.json());
@@ -48,14 +49,20 @@ app.use(
     onError: (err, req, res) => {
       console.error('Proxy error:', err.message);
       if (!res.headersSent) {
-        res.status(502).json({ success: false, message: 'Upstream service unavailable' });
+        res
+          .status(502)
+          .json({ success: false, message: 'Upstream service unavailable' });
       }
-    }
+    },
   })
 );
 
 app.get('/', (req, res) => {
-  res.json({ ok: true, message: 'Proxy server running', target: FASTIFY_BACKEND_URL });
+  res.json({
+    ok: true,
+    message: 'Proxy server running',
+    target: FASTIFY_BACKEND_URL,
+  });
 });
 
 app.listen(PORT, () => {
