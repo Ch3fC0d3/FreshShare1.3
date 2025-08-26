@@ -11,6 +11,9 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const authJwt = require('./middleware/authJwt');
 const querystring = require('querystring');
 
+// Configure base URL for deployment in subdirectories
+const BASE_URL = process.env.BASE_URL || '';
+
 // Custom error logging to a public file
 const logErrorToFile = (error) => {
   try {
@@ -97,18 +100,35 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Set explicit MIME types and serve static files
-app.use(express.static(path.join(__dirname, 'public_html'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
-// Also serve from public dir for backward compatibility
+// Prioritize public over public_html for consolidated directory approach
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, path) => {
     if (path.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
+    } else if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html');
+    } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (path.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    }
+  }
+}));
+// Fallback to public_html for backward compatibility
+app.use(express.static(path.join(__dirname, 'public_html'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html');
+    } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (path.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
     }
   }
 }));
@@ -262,77 +282,89 @@ app.get('/health', (req, res) => {
 // Page Routes
 app.get('/', (req, res) => {
   res.render('pages/index', { 
-    title: 'FreshShare - Home'
+    title: 'FreshShare - Home',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/marketplace', (req, res) => {
   res.render('pages/marketplace', { 
-    title: 'FreshShare - Marketplace'
+    title: 'FreshShare - Marketplace',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/create-listing', (req, res) => {
   res.render('pages/create-listing', { 
-    title: 'FreshShare - Create Listing'
+    title: 'FreshShare - Create Listing',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/forum', (req, res) => {
   res.render('pages/forum', { 
-    title: 'FreshShare - Forum'
+    title: 'FreshShare - Forum',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/groups', (req, res) => {
   res.render('pages/groups', { 
-    title: 'FreshShare - Groups'
+    title: 'FreshShare - Groups',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/create-group', (req, res) => {
   res.render('pages/create-group', { 
-    title: 'FreshShare - Create New Group'
+    title: 'FreshShare - Create New Group',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/group-details', (req, res) => {
   res.render('pages/group-details', { 
     title: 'FreshShare - Group Details',
-    groupId: req.query.id
+    groupId: req.query.id,
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/groups/:id/shopping', (req, res) => {
   res.render('pages/group_shopping', { 
     title: 'FreshShare - Group Shopping',
-    groupId: req.params.id
+    groupId: req.params.id,
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/groups/:id/orders', (req, res) => {
   res.render('pages/group_orders', { 
     title: 'FreshShare - Group Orders',
-    groupId: req.params.id
+    groupId: req.params.id,
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/orders/:id', (req, res) => {
   res.render('pages/order_details', { 
     title: 'FreshShare - Order Details',
-    orderId: req.params.id
+    orderId: req.params.id,
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/about', (req, res) => {
   res.render('pages/about', { 
-    title: 'FreshShare - About'
+    title: 'FreshShare - About',
+    baseUrl: BASE_URL
   });
 });
 
 app.get('/contact', (req, res) => {
   res.render('pages/contact', { 
-    title: 'FreshShare - Contact'
+    title: 'FreshShare - Contact',
+    baseUrl: BASE_URL
   });
 });
 
@@ -375,7 +407,8 @@ app.get('/profile', async (req, res) => {
     // Render the profile page with the user data
     res.render('pages/profile', {
       title: 'FreshShare - Profile',
-      user: formattedUserData
+      user: formattedUserData,
+      baseUrl: BASE_URL
     });
   } catch (error) {
     console.error('Profile page error:', error);
@@ -398,7 +431,8 @@ app.get('/profile-edit', async (req, res) => {
 
     res.render('pages/profile-edit', {
       title: 'FreshShare - Edit Profile',
-      user: userData
+      user: userData,
+      baseUrl: BASE_URL
     });
   } catch (error) {
     console.error('Profile edit page error:', error);
@@ -412,7 +446,8 @@ app.get('/profile-edit', async (req, res) => {
 app.get('/dashboard', (req, res) => {
   // Always render dashboard; client will fetch data and handle auth redirects
   res.render('pages/dashboard', { 
-    title: 'FreshShare - Dashboard'
+    title: 'FreshShare - Dashboard',
+    baseUrl: BASE_URL
   });
 });
 
@@ -421,7 +456,8 @@ app.get('/login', (req, res) => {
     return res.redirect('/dashboard');
   }
   res.render('pages/login', { 
-    title: 'FreshShare - Login'
+    title: 'FreshShare - Login',
+    baseUrl: BASE_URL
   });
 });
 
@@ -430,7 +466,8 @@ app.get('/signup', (req, res) => {
     return res.redirect('/dashboard');
   }
   res.render('pages/signup', { 
-    title: 'FreshShare - Sign Up'
+    title: 'FreshShare - Sign Up',
+    baseUrl: BASE_URL
   });
 });
 

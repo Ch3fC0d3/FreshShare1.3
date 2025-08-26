@@ -15,6 +15,7 @@ node aggressive-cleanup.js
 ```
 
 The cleanup scripts have:
+
 - Removed redundant deployment scripts
 - Removed duplicate package-lock.json files
 - Cleaned upload directories
@@ -43,6 +44,7 @@ This push will automatically trigger the GitHub Actions workflow defined in `.gi
 ### 3. GitHub Actions Workflow Process
 
 The workflow will:
+
 1. Set up Node.js 18
 2. Create `.env` files with secrets from GitHub repository
 3. Install dependencies for Express and Fastify
@@ -59,11 +61,39 @@ After the GitHub Actions workflow completes:
 - [ ] Verify CSS loads without errors (using browser dev tools)
 - [ ] Test the CSS test page at `/css-test-page.html`
 - [ ] Check browser console for any CSS 404 errors
+- [ ] Verify CSS loads in both root domain and subdirectory configurations
+- [ ] Test automatic path detection in css-fix.js (check browser console)
 - [ ] Verify services are running on the server (via SSH if needed)
 - [ ] Check if the site renders correctly with all styles
 - [ ] Test core functionality (login, groups, marketplace, etc.)
 
-### 5. Troubleshooting
+### 5. CSS Path Handling Implementation
+
+The deployment includes enhanced CSS path handling to ensure styles load correctly:
+
+```javascript
+// Detect base URL - check if we're running under a subdirectory
+const basePathElements = window.location.pathname.split('/');
+let basePath = '';
+if (basePathElements.length > 2 && basePathElements[1] !== '') {
+  basePath = '/' + basePathElements[1];
+  console.log('Detected base path:', basePath);
+}
+```
+
+The CSS fix handles various deployment scenarios:
+
+- Root domain deployment (e.g., example.com)
+- Subdirectory deployment (e.g., example.com/freshshare)
+- Different server configurations
+
+To test path detection:
+
+1. Check the browser console for "Detected base path" messages
+2. Verify that CSS loads with both relative and absolute paths
+3. Confirm the CSS reload mechanism works if initial loading fails
+
+### 6. Troubleshooting
 
 If deployment issues occur:
 - Check GitHub Actions logs for errors

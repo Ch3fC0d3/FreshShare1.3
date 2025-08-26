@@ -13,27 +13,28 @@ const users = [
     username: 'jane_gardener',
     email: 'jane@example.com',
     password: 'password123',
-    profileImage: '/assets/images/avatar1.jpg'
+    profileImage: '/assets/images/avatar1.jpg',
   },
   {
     username: 'urban_farmer',
     email: 'farmer@example.com',
     password: 'password123',
-    profileImage: '/assets/images/avatar2.jpg'
+    profileImage: '/assets/images/avatar2.jpg',
   },
   {
     username: 'green_thumb',
     email: 'green@example.com',
     password: 'password123',
-    profileImage: '/assets/images/avatar3.jpg'
-  }
+    profileImage: '/assets/images/avatar3.jpg',
+  },
 ];
 
 // Sample listing data
 const listings = [
   {
     title: 'Organic Tomatoes',
-    description: 'Fresh, homegrown organic tomatoes from my backyard garden. These are pesticide-free and picked at peak ripeness for maximum flavor.',
+    description:
+      'Fresh, homegrown organic tomatoes from my backyard garden. These are pesticide-free and picked at peak ripeness for maximum flavor.',
     price: 4.99,
     priceUnit: 'lb',
     category: 'vegetables',
@@ -46,17 +47,18 @@ const listings = [
       zipCode: '75401',
       coordinates: {
         lat: 33.1384,
-        lng: -96.1108
-      }
+        lng: -96.1108,
+      },
     },
     isOrganic: true,
     quantity: 10,
-    tags: ['organic', 'tomatoes', 'homegrown', 'vegetables']
+    tags: ['organic', 'tomatoes', 'homegrown', 'vegetables'],
   },
   {
     title: 'Garden Spade',
-    description: 'Lightly used garden spade, perfect for small garden projects. Comfortable grip and durable construction.',
-    price: 12.50,
+    description:
+      'Lightly used garden spade, perfect for small garden projects. Comfortable grip and durable construction.',
+    price: 12.5,
     priceUnit: 'each',
     category: 'tools',
     condition: 'good',
@@ -68,16 +70,17 @@ const listings = [
       zipCode: '75402',
       coordinates: {
         lat: 33.1295,
-        lng: -96.1177
-      }
+        lng: -96.1177,
+      },
     },
     isOrganic: false,
     quantity: 1,
-    tags: ['tools', 'gardening', 'spade']
+    tags: ['tools', 'gardening', 'spade'],
   },
   {
     title: 'Fresh Strawberries',
-    description: 'Sweet, juicy strawberries grown in my home garden. Perfect for desserts, smoothies, or eating fresh!',
+    description:
+      'Sweet, juicy strawberries grown in my home garden. Perfect for desserts, smoothies, or eating fresh!',
     price: 6.99,
     priceUnit: 'lb',
     category: 'fruits',
@@ -90,47 +93,47 @@ const listings = [
       zipCode: '75403',
       coordinates: {
         lat: 33.1456,
-        lng: -96.1234
-      }
+        lng: -96.1234,
+      },
     },
     isOrganic: true,
     quantity: 5,
-    tags: ['organic', 'strawberries', 'fruits', 'fresh']
-  }
+    tags: ['organic', 'strawberries', 'fruits', 'fresh'],
+  },
 ];
 
 // Connect to MongoDB
 mongoose
   .connect(`mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}`, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   })
   .then(async () => {
-    console.log("Successfully connected to MongoDB.");
-    
+    console.log('Successfully connected to MongoDB.');
+
     try {
       // Clear existing data
       await db.user.deleteMany({});
       await db.listing.deleteMany({});
-      
+
       console.log('Cleared existing data');
-      
+
       // Create users
       const createdUsers = await db.user.insertMany(users);
       console.log(`Created ${createdUsers.length} users`);
-      
+
       // Assign users to listings
       const populatedListings = listings.map((listing, index) => {
         return {
           ...listing,
-          seller: createdUsers[index % createdUsers.length]._id
+          seller: createdUsers[index % createdUsers.length]._id,
         };
       });
-      
+
       // Create listings
       const createdListings = await db.listing.insertMany(populatedListings);
       console.log(`Created ${createdListings.length} listings`);
-      
+
       console.log('Database seeded successfully!');
     } catch (error) {
       console.error('Error seeding database:', error);
@@ -138,8 +141,8 @@ mongoose
       mongoose.connection.close();
     }
   })
-  .catch(err => {
-    console.error("Connection error", err);
+  .catch((err) => {
+    console.error('Connection error', err);
     process.exit(1);
   });
-1
+1;

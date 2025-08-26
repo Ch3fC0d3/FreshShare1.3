@@ -5,7 +5,10 @@ const GroupCard = ({ group }) => {
   return (
     <div className="group-card">
       <div className="group-card-image">
-        <img src={group.imageUrl || "/images/default-group.jpg"} alt={group.name} />
+        <img
+          src={group.imageUrl || '/images/default-group.jpg'}
+          alt={group.name}
+        />
       </div>
       <div className="group-card-content">
         <h3 className="group-card-title">{group.name}</h3>
@@ -18,7 +21,9 @@ const GroupCard = ({ group }) => {
             <i className="fas fa-map-marker-alt"></i> {group.location}
           </span>
         </div>
-        <a href={`/groups/${group.id}`} className="btn btn-primary">View Group</a>
+        <a href={`/groups/${group.id}`} className="btn btn-primary">
+          View Group
+        </a>
       </div>
     </div>
   );
@@ -28,7 +33,7 @@ const GroupCard = ({ group }) => {
 const GroupCardsGrid = ({ groups }) => {
   return (
     <div className="group-cards-grid">
-      {groups.map(group => (
+      {groups.map((group) => (
         <GroupCard key={group.id} group={group} />
       ))}
     </div>
@@ -37,5 +42,5 @@ const GroupCardsGrid = ({ groups }) => {
 
 module.exports = {
   GroupCard,
-  GroupCardsGrid
+  GroupCardsGrid,
 };

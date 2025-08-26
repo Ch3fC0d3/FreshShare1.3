@@ -1,0 +1,14 @@
+# Ignore node_modules
+node_modules
+
+# Ignore backup directories
+cleanup-backup-*
+
+# Ignore deployment-ready directory
+deployment-ready/
+
+# Ignore css-fix-package directory
+css-fix-package/
+
+# Ignore log files
+*.log
