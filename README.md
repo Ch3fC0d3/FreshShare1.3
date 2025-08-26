@@ -288,6 +288,58 @@ Common HTTP Status Codes:
 
 ## Setup Instructions
 
+## Conflict Resolution
+
+### Quick Conflict Detection
+
+If you encounter any issues with the FreshShare application, use the automated conflict detection tool:
+
+```bash
+./detect-conflicts.sh
+```
+
+This script will:
+- ✅ Detect Git merge conflicts
+- ✅ Check service and port conflicts  
+- ✅ Verify path and configuration issues
+- ✅ Validate environment settings
+- ✅ Check file permissions
+- ✅ Provide automated resolution options
+
+### Common Conflict Types
+
+1. **Git Conflicts**: Merge conflicts when collaborating
+2. **Service Conflicts**: Port conflicts between Express and Fastify
+3. **Path Conflicts**: Incorrect application root paths in cPanel
+4. **Environment Conflicts**: Missing or misconfigured .env files
+5. **Permission Conflicts**: Incorrect file/directory permissions
+
+### Quick Fix Commands
+
+```bash
+# For comprehensive service issues
+./comprehensive-503-fix.sh
+
+# For detailed diagnostics
+./deployment/troubleshoot-503.sh
+
+# For complete deployment reset
+./one-click-deploy.sh
+
+# For detailed resolution guide
+cat CONFLICT_RESOLUTION_GUIDE.md
+```
+
+### Emergency Fixes
+
+For critical production issues, see the emergency fix guide:
+
+```bash
+cat EMERGENCY_FIX_GUIDE.md
+```
+
+## Installation
+
 ### Prerequisites
 1. **Node.js** - Version 12 or higher
 2. **MongoDB** - Version 4.4 or higher

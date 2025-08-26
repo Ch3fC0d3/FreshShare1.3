@@ -2,6 +2,23 @@
 
 This guide provides quick steps to fix 503 errors in your FreshShare application on cPanel.
 
+## Automated Conflict Detection
+
+**NEW**: For comprehensive conflict detection and automated resolution, run:
+
+```bash
+./detect-conflicts.sh
+```
+
+This tool will detect and help resolve:
+- Git merge conflicts
+- Service/port conflicts  
+- Path configuration issues
+- Environment problems
+- Permission conflicts
+
+For detailed resolution steps, see: `CONFLICT_RESOLUTION_GUIDE.md`
+
 ## Quick Diagnostic
 
 Run these commands to diagnose issues:
