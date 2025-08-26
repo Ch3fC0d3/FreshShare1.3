@@ -58,8 +58,10 @@ mongoose
 // 3. Make sure your .env file contains:
 // MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/freshshare_db
 
-console.log("To implement this change:");
-console.log("1. Update server.js to use MONGODB_URI from environment variables");
-console.log("2. Create a .env file with your MongoDB Atlas connection string");
-console.log("3. Ensure dotenv package is installed (npm install dotenv)");
-console.log("4. Test the connection before deploying");
+console.log('To implement this change:');
+console.log(
+  '1. Update server.js to use MONGODB_URI from environment variables'
+);
+console.log('2. Create a .env file with your MongoDB Atlas connection string');
+console.log('3. Ensure dotenv package is installed (npm install dotenv)');
+console.log('4. Test the connection before deploying');

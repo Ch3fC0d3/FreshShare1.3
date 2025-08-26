@@ -1,6 +1,6 @@
 /**
  * FreshShare Deployment Preparation Script
- * 
+ *
  * This script prepares all necessary files for deployment to production.
  * It creates a deployment-ready directory with all required files.
  */
@@ -23,7 +23,7 @@ const expressFiles = [
   'start-express.sh',
   'setup-cron-jobs.sh',
   'deploy-nodejs-production.sh',
-  'diagnose-nodejs-production.js'
+  'diagnose-nodejs-production.js',
 ];
 
 // Directories to include in Express deployment
@@ -34,7 +34,7 @@ const expressDirs = [
   'middleware',
   'models',
   'views',
-  'config'
+  'config',
 ];
 
 // Files to include in Fastify deployment
@@ -42,7 +42,7 @@ const fastifyFiles = [
   'server.ts',
   'package.json',
   'package-lock.json',
-  'start-fastify.sh'
+  'start-fastify.sh',
 ];
 
 // Create deployment directory structure
@@ -65,10 +65,10 @@ if (!fs.existsSync(fastifyDir)) {
 
 // Copy Express files
 console.log('Copying Express files...');
-expressFiles.forEach(file => {
+expressFiles.forEach((file) => {
   const sourcePath = path.join(sourceDir, file);
   const destPath = path.join(expressDir, file);
-  
+
   if (fs.existsSync(sourcePath)) {
     fs.copyFileSync(sourcePath, destPath);
     console.log(`Copied ${file}`);
@@ -79,16 +79,16 @@ expressFiles.forEach(file => {
 
 // Copy Express directories
 console.log('Copying Express directories...');
-expressDirs.forEach(dir => {
+expressDirs.forEach((dir) => {
   const sourcePathDir = path.join(sourceDir, dir);
   const destPathDir = path.join(expressDir, dir);
-  
+
   if (fs.existsSync(sourcePathDir)) {
     // Create directory if it doesn't exist
     if (!fs.existsSync(destPathDir)) {
       fs.mkdirSync(destPathDir, { recursive: true });
     }
-    
+
     // Copy directory contents recursively
     copyDirRecursive(sourcePathDir, destPathDir);
     console.log(`Copied ${dir} directory`);
@@ -101,10 +101,10 @@ expressDirs.forEach(dir => {
 console.log('Copying Fastify files...');
 const fastifySourceDir = path.join(sourceDir, 'fastify-backend');
 if (fs.existsSync(fastifySourceDir)) {
-  fastifyFiles.forEach(file => {
+  fastifyFiles.forEach((file) => {
     const sourcePath = path.join(fastifySourceDir, file);
     const destPath = path.join(fastifyDir, file);
-    
+
     if (fs.existsSync(sourcePath)) {
       fs.copyFileSync(sourcePath, destPath);
       console.log(`Copied ${file}`);
@@ -112,18 +112,18 @@ if (fs.existsSync(fastifySourceDir)) {
       console.warn(`Warning: ${file} not found in fastify-backend directory`);
     }
   });
-  
+
   // Copy any additional files in the fastify-backend directory
   const fastifyContents = fs.readdirSync(fastifySourceDir);
-  fastifyContents.forEach(item => {
+  fastifyContents.forEach((item) => {
     const sourcePath = path.join(fastifySourceDir, item);
     const destPath = path.join(fastifyDir, item);
-    
+
     // Skip directories and already copied files
     if (fs.statSync(sourcePath).isDirectory() || fastifyFiles.includes(item)) {
       return;
     }
-    
+
     fs.copyFileSync(sourcePath, destPath);
     console.log(`Copied additional file: ${item}`);
   });
@@ -193,13 +193,13 @@ const docFiles = [
   'NODEJS_IMPLEMENTATION_GUIDE.md',
   'NODEJS_SOLUTION_SUMMARY.md',
   'DEPLOYMENT_CHECKLIST.md',
-  'EMERGENCY_FIX_GUIDE.md'
+  'EMERGENCY_FIX_GUIDE.md',
 ];
 
-docFiles.forEach(file => {
+docFiles.forEach((file) => {
   const sourcePath = path.join(sourceDir, file);
   const destPath = path.join(deploymentDir, file);
-  
+
   if (fs.existsSync(sourcePath)) {
     fs.copyFileSync(sourcePath, destPath);
     console.log(`Copied ${file}`);
@@ -220,8 +220,12 @@ try {
 }
 
 console.log('\nDeployment preparation complete!');
-console.log('The deployment-ready directory contains all files needed for production.');
-console.log('A ZIP file has also been created for easy transfer to your production server.');
+console.log(
+  'The deployment-ready directory contains all files needed for production.'
+);
+console.log(
+  'A ZIP file has also been created for easy transfer to your production server.'
+);
 console.log('\nNext steps:');
 console.log('1. Upload the files to your production server');
 console.log('2. Follow the instructions in the README.md file');
@@ -229,11 +233,11 @@ console.log('2. Follow the instructions in the README.md file');
 // Helper function to copy directory contents recursively
 function copyDirRecursive(src, dest) {
   const entries = fs.readdirSync(src, { withFileTypes: true });
-  
-  entries.forEach(entry => {
+
+  entries.forEach((entry) => {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
-    
+
     if (entry.isDirectory()) {
       if (!fs.existsSync(destPath)) {
         fs.mkdirSync(destPath, { recursive: true });
