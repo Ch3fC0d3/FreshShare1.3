@@ -1,75 +1,81 @@
 // CSS Fix Script for Production Environment
-(function() {
+(function () {
   console.log('CSS Fix Script loaded');
-  
+
   // Run after DOM content is loaded
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     console.log('Checking CSS loading status...');
-    
+
     // Try to access the CSS files with both relative and absolute paths
     const cssFiles = [
       'reset-styles.css',
       'color-system.css',
       'main.css',
       'design-system.css',
-      'groups-custom.css'
+      'groups-custom.css',
     ];
-    
+
     // Base URL
     const baseUrl = window.location.origin;
-    
+
     // Check if CSS is properly styled by checking computed styles
     const bodyStyles = window.getComputedStyle(document.body);
     const headingElements = document.querySelectorAll('h1, h2, h3');
-    
+
     // If we detect unstyled content, try to reload CSS files
     if (!cssFilesAreLoaded()) {
       console.log('CSS appears to be missing, attempting to load...');
       reloadCSSFiles();
     }
-    
+
     // Function to check if CSS appears to be loaded
     function cssFilesAreLoaded() {
       // Simple heuristic - in our app, styled content usually has:
       // 1. Non-default fonts
       // 2. Margins/padding defined
       // 3. Specific background colors
-      
+
       const fontFamily = bodyStyles.getPropertyValue('font-family');
       const backgroundColor = bodyStyles.getPropertyValue('background-color');
-      
+
       // Check if any headings have custom styling
       let headingsStyled = false;
-      headingElements.forEach(heading => {
+      headingElements.forEach((heading) => {
         const headingStyle = window.getComputedStyle(heading);
-        if (headingStyle.getPropertyValue('color') !== 'rgb(0, 0, 0)' || 
-            headingStyle.getPropertyValue('font-weight') !== '400') {
+        if (
+          headingStyle.getPropertyValue('color') !== 'rgb(0, 0, 0)' ||
+          headingStyle.getPropertyValue('font-weight') !== '400'
+        ) {
           headingsStyled = true;
         }
       });
-      
+
       console.log('Font family:', fontFamily);
       console.log('Background color:', backgroundColor);
       console.log('Headings styled:', headingsStyled);
-      
+
       // If we see default browser styling, CSS is likely not loaded
-      return !(fontFamily.includes('serif') && backgroundColor === 'rgba(0, 0, 0, 0)' && !headingsStyled);
+      return !(
+        fontFamily.includes('serif') &&
+        backgroundColor === 'rgba(0, 0, 0, 0)' &&
+        !headingsStyled
+      );
     }
-    
+
     // Function to reload CSS files
     function reloadCSSFiles() {
       // Create new link elements with full paths and cache-busting
-      cssFiles.forEach(file => {
+      cssFiles.forEach((file) => {
         // Try multiple paths to ensure loading
         const paths = [
           `/css/${file}?t=${Date.now()}`,
           `${baseUrl}/css/${file}?t=${Date.now()}`,
           `${baseUrl}/public_html/css/${file}?t=${Date.now()}`,
-          `${baseUrl}/public/css/${file}?t=${Date.now()}`
+          `${baseUrl}/public/css/${file}?t=${Date.now()}`,
         ];
-        
+
         // Try each path
-        paths.forEach(path => {
+        paths.forEach((path) => {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
           link.type = 'text/css';
@@ -78,7 +84,7 @@
           console.log(`Attempting to load CSS from: ${path}`);
         });
       });
-      
+
       // Add inline fallback styles for critical elements
       const criticalStyles = document.createElement('style');
       criticalStyles.textContent = `
@@ -125,7 +131,7 @@
         }
       `;
       document.head.appendChild(criticalStyles);
-      
+
       // Add visual indicator that CSS fix is active
       const indicator = document.createElement('div');
       indicator.style.position = 'fixed';

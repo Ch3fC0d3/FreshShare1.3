@@ -5,14 +5,18 @@ const { Pool } = require('pg');
 
 // Config
 const PORT = Number(process.env.PORT || 8080);
-const DATABASE_URL = process.env.DATABASE_URL || 'postgres://localhost:5432/freshshare';
+const DATABASE_URL =
+  process.env.DATABASE_URL || 'postgres://localhost:5432/freshshare';
 console.log('Starting server on port:', PORT);
-console.log('Using database URL (redacted):', DATABASE_URL.replace(/:\\/\\/[^:]+:[^@]+@/, '://***:***@'));
+console.log(
+  'Using database URL (redacted):',
+  DATABASE_URL.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@')
+);
 
 // Create app
-const app = fastify({ 
+const app = fastify({
   logger: true,
-  trustProxy: true
+  trustProxy: true,
 });
 
 // Basic health check endpoint
@@ -30,13 +34,14 @@ app.get('/case-pack', async (req, reply) => {
 });
 
 // Start server
-app.listen({ port: PORT, host: '0.0.0.0' })
+app
+  .listen({ port: PORT, host: '0.0.0.0' })
   .then(() => {
     console.log(`FreshShare backend listening on port ${PORT}`);
     // Create a status file to indicate successful startup
     require('fs').writeFileSync('.server_running', new Date().toISOString());
   })
-  .catch((err) => { 
-    console.error('Server startup error:', err); 
-    process.exit(1); 
+  .catch((err) => {
+    console.error('Server startup error:', err);
+    process.exit(1);
   });

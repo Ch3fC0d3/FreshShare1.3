@@ -1,189 +1,184 @@
 const jwt = require('jsonwebtoken');
 const db = require('../models');
+
 const User = db.user;
 
-// Retrieve JWT secret from environment or use a default (in production, always use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'freshShare-auth-secret';
+// Retrieve JWT secret from environment
+const JWT_SECRET = process.env.JWT_SECRET;
 
-/**
- * Verify JWT token from request headers
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- * @returns {Object} - Continues to next middleware or returns error response
- */
-const verifyToken = (req, res, next) => {
-  // Get token from request headers (case-insensitive) or cookies
+const getTokenFromRequest = (req) => {
   const getHeaderCaseInsensitive = (headers, headerName) => {
     const headerKeys = Object.keys(headers);
-    const key = headerKeys.find(k => k.toLowerCase() === headerName.toLowerCase());
+    const key = headerKeys.find(
+      (k) => k.toLowerCase() === headerName.toLowerCase()
+    );
     return key ? headers[key] : null;
   };
-  
-  const token = 
-    getHeaderCaseInsensitive(req.headers, 'x-access-token') || 
+
+  const token =
+    getHeaderCaseInsensitive(req.headers, 'x-access-token') ||
     getHeaderCaseInsensitive(req.headers, 'authorization') ||
-    req.cookies?.token; // Also check cookies for token
-  
-  // Make authentication optional for the groups API
-  if (req.originalUrl === '/api/groups' && req.method === 'GET') {
-    if (!token) {
-      // For public access to groups, continue without setting userId
-      return next();
-    }
+    req.cookies?.token;
+
+  if (token && token.startsWith('Bearer ')) {
+    return token.slice(7);
   }
-  
-  // If no token for protected routes, return error
+  return token;
+};
+
+const verifyToken = (req, res, next) => {
+  const token = getTokenFromRequest(req);
+
   if (!token) {
-    console.log(`No token found for ${req.method} ${req.originalUrl}`);
-    
-    // For API routes, return JSON error
     if (req.originalUrl.startsWith('/api/')) {
       return res.status(403).json({
         success: false,
-        message: 'No token provided!'
+        message: 'No token provided!',
       });
     }
-    
-    // For web routes, redirect to login
-    return res.redirect('/login?redirect=' + encodeURIComponent(req.originalUrl));
+    return res.redirect(`/login?redirect=${encodeURIComponent(req.originalUrl)}`);
   }
-  
-  // Remove Bearer prefix if present
-  const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token;
-  
+
   try {
-    // Verify token
-    const decoded = jwt.verify(tokenValue, JWT_SECRET);
-    
-    // Set userId in request
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.id;
-    
     next();
   } catch (error) {
     console.error('Token verification failed:', error.message);
-    
-    // For public endpoints, continue without authentication
-    if (req.originalUrl === '/api/groups' && req.method === 'GET') {
-      return next();
-    }
-    
-    // For API routes, return JSON error
     if (req.originalUrl.startsWith('/api/')) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized! Token is invalid or expired.'
+        message: 'Unauthorized! Token is invalid or expired.',
       });
     }
-    
-    // For web routes, clear cookie and redirect to login
     res.clearCookie('token');
-    return res.redirect('/login?redirect=' + encodeURIComponent(req.originalUrl) + 
-                       '&error=' + encodeURIComponent('Your session has expired. Please log in again.'));
+    return res.redirect(
+      `/login?redirect=${encodeURIComponent(
+        req.originalUrl
+      )}&error=${encodeURIComponent(
+        'Your session has expired. Please log in again.'
+      )}`
+    );
   }
 };
 
-/**
- * Check if request is from an authenticated user
- * Creates middleware that verifies token and validates against database
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- * @returns {Object} - Continues to next middleware or returns error response
- */
+const optionalAuth = (req, res, next) => {
+  const token = getTokenFromRequest(req);
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.userId = decoded.id;
+    } catch (error) {
+      // Ignore error for optional authentication
+      console.error('Optional auth token verification failed:', error.message);
+    }
+  }
+  next();
+};
+
 const isAuthenticated = async (req, res, next) => {
-  try {
-    // Verify token first
-    verifyToken(req, res, async () => {
-      // Skip user check for public endpoints
-      if (req.originalUrl === '/api/groups' && req.method === 'GET' && !req.userId) {
-        return next();
-      }
-      
-      // Check if user exists
-      const user = await User.findById(req.userId);
-      
-      if (!user) {
-        console.log(`User not found for ID: ${req.userId}`);
-        
-        // For API routes, return JSON error
-        if (req.originalUrl.startsWith('/api/')) {
-          return res.status(404).json({
-            success: false,
-            message: 'User not found!'
-          });
-        }
-        
-        // For web routes, clear cookie and redirect to login
-        res.clearCookie('token');
-        return res.redirect('/login?error=' + encodeURIComponent('User account not found. Please log in again.'));
-      }
-      
-      next();
+  if (!req.userId) {
+    // This should not happen if verifyToken is used before this middleware
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required.',
     });
+  }
+
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      if (req.originalUrl.startsWith('/api/')) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found!',
+        });
+      }
+      res.clearCookie('token');
+      return res.redirect(
+        `/login?error=${encodeURIComponent(
+          'User account not found. Please log in again.'
+        )}`
+      );
+    }
+    req.user = user;
+    next();
   } catch (error) {
     console.error('Authentication error:', error.message);
-    
-    // For API routes, return JSON error
-    if (req.originalUrl.startsWith('/api/')) {
-      return res.status(500).json({
-        success: false,
-        message: 'An error occurred while authenticating user.',
-        error: error.message
-      });
-    }
-    
-    // For web routes, redirect to error page
-    return res.status(500).render('error', {
-      title: 'Authentication Error',
-      message: 'An error occurred during authentication. Please try again later.'
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred while authenticating user.',
+      error: error.message,
     });
   }
 };
 
-/**
- * Check if user has admin role
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- * @returns {Object} - Continues to next middleware or returns error response
- */
 const isAdmin = async (req, res, next) => {
-  try {
-    // Get user from database
-    const user = await User.findById(req.userId);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found!"
-      });
-    }
-    
-    // Check if user has admin role
-    if (user.roles && user.roles.includes('admin')) {
-      return next();
-    }
-    
-    // User is not admin
-    return res.status(403).json({
+  if (!req.user) {
+    // This should not happen if isAuthenticated is used before this middleware
+    return res.status(401).json({
       success: false,
-      message: "Requires Admin Role!"
-    });
-  } catch (error) {
-    console.error('Admin role check error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Error checking admin role",
-      error: error.message
+      message: 'Authentication required.',
     });
   }
+
+  if (req.user.roles && req.user.roles.includes('admin')) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Requires Admin Role!',
+  });
+};
+
+const isModerator = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required.',
+    });
+  }
+
+  if (req.user.roles && req.user.roles.includes('moderator')) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Requires Moderator Role!',
+  });
+};
+
+const isModeratorOrAdmin = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required.',
+    });
+  }
+
+  if (
+    req.user.roles &&
+    (req.user.roles.includes('moderator') || req.user.roles.includes('admin'))
+  ) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Requires Moderator or Admin Role!',
+  });
 };
 
 const authJwt = {
   verifyToken,
+  optionalAuth,
   isAuthenticated,
-  isAdmin
+  isAdmin,
+  isModerator,
+  isModeratorOrAdmin,
 };
 
 module.exports = authJwt;
