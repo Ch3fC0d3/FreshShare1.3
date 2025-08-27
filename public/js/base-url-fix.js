@@ -1,82 +1,104 @@
-// Base URL Fix Script for Production Environment
+// Base URL Fix Script for Production Environment v1.1
 (function() {
-  console.log('Base URL Fix Script loaded v1.0');
+  console.log('Base URL Fix Script loaded v1.1');
   
-  // Run immediately to prevent flickering links
+  // Get the base URL from the server-side (from EJS template)
+  let serverBaseUrl = '';
+  const baseUrlMeta = document.querySelector('meta[name="base-url"]');
+  if (baseUrlMeta) {
+    serverBaseUrl = baseUrlMeta.getAttribute('content') || '';
+    console.log('Server provided base URL:', serverBaseUrl);
+  }
+
+  // Make baseUrl available globally
+  window.fsBaseUrl = serverBaseUrl;
+
+  // Fix URLs immediately and whenever DOM changes
   runBaseUrlFix();
-  
-  // Then run again once DOM is fully loaded to catch any dynamically added links
   document.addEventListener('DOMContentLoaded', runBaseUrlFix);
-  
+
+  // Watch for dynamic content changes
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.addedNodes.length) {
+        runBaseUrlFix();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  // Intercept fetch/XHR requests to fix API URLs
+  const originalFetch = window.fetch;
+  window.fetch = function(url, options) {
+    const fixedUrl = fixUrl(url);
+    return originalFetch.call(this, fixedUrl, options);
+  };
+
+  const originalXHROpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method, url, ...args) {
+    const fixedUrl = fixUrl(url);
+    return originalXHROpen.call(this, method, fixedUrl, ...args);
+  };
+
+  // URL fixing function
+  function fixUrl(url) {
+    if (typeof url !== 'string') return url;
+    if (!serverBaseUrl) return url;
+    if (url.startsWith('http://') || 
+        url.startsWith('https://') || 
+        url.startsWith('mailto:') || 
+        url.startsWith('tel:') || 
+        url.startsWith('javascript:') || 
+        url.startsWith('#') ||
+        url.startsWith('blob:') ||
+        url.startsWith('data:')) {
+      return url;
+    }
+
+    // Handle API endpoints
+    if (url.startsWith('/api/')) {
+      return serverBaseUrl + url;
+    }
+
+    // Fix relative URLs
+    return url.startsWith('/') ? serverBaseUrl + url : serverBaseUrl + '/' + url;
+  }
+
   function runBaseUrlFix() {
-    console.log('Fixing links with correct base URL...');
-    
-    // 1. Get the base URL from the server-side (from EJS template)
-    let serverBaseUrl = '';
-    const baseUrlMeta = document.querySelector('meta[name="base-url"]');
-    if (baseUrlMeta) {
-      serverBaseUrl = baseUrlMeta.getAttribute('content') || '';
-      console.log('Server provided base URL:', serverBaseUrl);
-    }
-    
-    // 2. Ensure window.fsBaseUrl is set correctly
-    if (window.fsBaseUrl !== serverBaseUrl) {
-      console.log('Updating window.fsBaseUrl from', window.fsBaseUrl, 'to', serverBaseUrl);
-      window.fsBaseUrl = serverBaseUrl;
-    }
-    
-    // 3. Fix all <a> tags that don't already have absolute URLs or special protocols
-    const links = document.querySelectorAll('a[href]');
-    links.forEach(link => {
+    if (!serverBaseUrl) return;
+
+    // Fix <a> tags
+    document.querySelectorAll('a[href]').forEach(link => {
       const href = link.getAttribute('href');
-      
-      // Skip links that are already absolute URLs or special protocols
-      if (href.startsWith('http://') || 
-          href.startsWith('https://') || 
-          href.startsWith('mailto:') || 
-          href.startsWith('tel:') ||
-          href.startsWith('javascript:') ||
-          href.startsWith('#')) {
-        return;
-      }
-      
-      // Skip links that already have the correct base URL
-      if (serverBaseUrl && href.startsWith(serverBaseUrl + '/')) {
-        return;
-      }
-      
-      // Fix relative links
-      if (href.startsWith('/')) {
-        // Already root-relative, just prepend the base URL (if any)
-        const newHref = serverBaseUrl + href;
-        console.log(`Fixing link: ${href} → ${newHref}`);
-        link.setAttribute('href', newHref);
-      } else {
-        // Relative to current path, make it root-relative with base URL
-        const newHref = serverBaseUrl + '/' + href;
-        console.log(`Fixing link: ${href} → ${newHref}`);
-        link.setAttribute('href', newHref);
+      const fixedHref = fixUrl(href);
+      if (fixedHref !== href) {
+        console.log(`Fixing link: ${href} → ${fixedHref}`);
+        link.setAttribute('href', fixedHref);
       }
     });
-    
-    // 4. Fix form actions that don't already have absolute URLs
-    const forms = document.querySelectorAll('form[action]');
-    forms.forEach(form => {
+
+    // Fix forms
+    document.querySelectorAll('form[action]').forEach(form => {
       const action = form.getAttribute('action');
-      
-      // Skip forms with absolute URLs
-      if (action.startsWith('http://') || action.startsWith('https://')) {
-        return;
-      }
-      
-      // Fix relative form actions
-      if (action.startsWith('/')) {
-        form.setAttribute('action', serverBaseUrl + action);
-      } else {
-        form.setAttribute('action', serverBaseUrl + '/' + action);
+      const fixedAction = fixUrl(action);
+      if (fixedAction !== action) {
+        console.log(`Fixing form action: ${action} → ${fixedAction}`);
+        form.setAttribute('action', fixedAction);
       }
     });
-    
-    console.log('Base URL fixing complete');
+
+    // Fix API endpoints in data attributes
+    document.querySelectorAll('[data-api-url]').forEach(el => {
+      const apiUrl = el.getAttribute('data-api-url');
+      const fixedApiUrl = fixUrl(apiUrl);
+      if (fixedApiUrl !== apiUrl) {
+        console.log(`Fixing API URL: ${apiUrl} → ${fixedApiUrl}`);
+        el.setAttribute('data-api-url', fixedApiUrl);
+      }
+    });
   }
 })();
