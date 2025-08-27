@@ -58,22 +58,62 @@ if (process.env.MONGODB_URI) {
   connectionURL = `mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}`;
 }
 
-// Connect to MongoDB with better error handling
+// Connect to MongoDB with better error handling and fallback mode
 console.log('Attempting to connect to MongoDB...', {
   connectionString: connectionURL ? 'Configured' : 'Missing',
   usingAtlas: !!(process.env.MONGODB_URI || process.env.MONGODB_HOST)
 });
 
+// Track MongoDB connection state
+let isMongoConnected = false;
+
 mongoose.connect(connectionURL, dbConfig.options)
   .then(() => {
     console.log('Successfully connected to MongoDB.');
+    isMongoConnected = true;
     initializeDatabase();
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
     logErrorToFile(err);
-    // process.exit(1); // Commented out to prevent server crash on DB connection failure
+    isMongoConnected = false;
   });
+
+// Add middleware to check MongoDB connection
+app.use((req, res, next) => {
+  // Skip MongoDB check for static files and base URL fix script
+  if (req.path.startsWith('/css/') || 
+      req.path.startsWith('/js/') || 
+      req.path.startsWith('/images/') || 
+      req.path === '/js/base-url-fix.js' ||
+      req.path === '/favicon.ico') {
+    return next();
+  }
+
+  // Allow health check endpoint
+  if (req.path === '/health') {
+    return next();
+  }
+
+  // For API routes, return 503 if MongoDB is down
+  if (req.path.startsWith('/api/') && !isMongoConnected) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database service temporarily unavailable'
+    });
+  }
+
+  // For page routes, show maintenance page if MongoDB is down
+  if (!isMongoConnected) {
+    return res.render('pages/maintenance', {
+      title: 'FreshShare - Maintenance',
+      baseUrl: BASE_URL,
+      error: 'Database connection is currently unavailable. Please try again later.'
+    });
+  }
+
+  next();
+});
 
 // Initialize database with roles if needed
 async function initializeDatabase() {
