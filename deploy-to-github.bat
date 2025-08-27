@@ -9,13 +9,12 @@ git pull origin restore_branch
 
 echo Adding modified files...
 git add .
-
-echo Adding modified files...
 git add server.js
 git add public/js/css-fix.js
+git add public/js/base-url-fix.js
 
 echo Committing changes...
-git commit -m "Fix CSP headers and improve CSS loading for production"
+git commit -m "Fix CSP headers, improve CSS loading, and fix link functionality for production"
 
 echo Pushing to GitHub...
 git push origin restore_branch
