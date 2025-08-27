@@ -1,6 +1,7 @@
 Fix baseUrl paths and links across all templates
 
 - Fixed all login redirects in group-details.ejs to use baseUrl
+- Updated server.js to use BASE_URL environment variable instead of hardcoded empty strings
 - Created comprehensive documentation in docs/baseurl-configuration-guide.md
 - Enhanced test-server.js to support testing with different baseUrl configs
 - Added command-line argument support to test-server.js
