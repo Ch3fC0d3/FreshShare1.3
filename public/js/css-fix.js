@@ -1,6 +1,6 @@
 // CSS Fix Script for Production Environment
 (function() {
-  console.log('CSS Fix Script loaded v1.2');
+  console.log('CSS Fix Script loaded v1.3');
   // Run after DOM content is loaded
   document.addEventListener('DOMContentLoaded', function () {
     console.log('Checking CSS loading status...');
@@ -91,15 +91,33 @@
           `/css/${file}?t=${cacheBuster}` // Fallback to root-relative path
         ];
 
-        // Try each path
-        paths.forEach((path) => {
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.type = 'text/css';
-          link.href = path;
-          document.head.appendChild(link);
-          console.log(`Attempting to load CSS from: ${path}`);
-        });
+        // Try each path with error handling and CSP compatibility
+        let cssLoaded = false;
+        for (let i = 0; i < paths.length && !cssLoaded; i++) {
+          const path = paths[i];
+          try {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = path;
+            
+            // Add error handling to detect failed loads
+            link.onload = function() {
+              console.log(`CSS successfully loaded from: ${path}`);
+              cssLoaded = true;
+            };
+            
+            link.onerror = function() {
+              console.error(`Failed to load CSS from: ${path}`);
+              // We'll try the next path automatically
+            };
+            
+            document.head.appendChild(link);
+            console.log(`Attempting to load CSS from: ${path}`);
+          } catch (error) {
+            console.error(`Error loading CSS from ${path}:`, error);
+          }
+        }
       });
 
       // Add inline fallback styles for critical elements

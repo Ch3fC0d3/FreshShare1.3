@@ -10,17 +10,12 @@ git pull origin restore_branch
 echo Adding modified files...
 git add .
 
-echo Adding resolved merge conflict files...
-git add views/pages/create-group.ejs
-git add views/pages/dashboard.ejs
-git add views/pages/group-details.ejs
-git add views/pages/groups.ejs
-git add views/pages/index.ejs
-git add views/pages/login.ejs
-git add views/pages/signup.ejs
+echo Adding modified files...
+git add server.js
+git add public/js/css-fix.js
 
 echo Committing changes...
-git commit -m "Resolve merge conflicts by consistently using <%= baseUrl %> for URLs and paths"
+git commit -m "Fix CSP headers and improve CSS loading for production"
 
 echo Pushing to GitHub...
 git push origin restore_branch

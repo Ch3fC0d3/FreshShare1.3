@@ -100,6 +100,35 @@ async function initializeDatabase() {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Content Security Policy middleware - Must be applied before serving static files
+app.use((req, res, next) => {
+  // In development, allow 'unsafe-eval' for easier debugging
+  // In production, this should be more restrictive
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self';"
+  );
+  
+  // Also add legacy headers for older browsers
+  res.setHeader(
+    'X-Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+  );
+  
+  next();
+});
+
+// CSP violation reporting endpoint
+app.post('/csp-violation', (req, res) => {
+  if (req.body) {
+    console.log('CSP Violation:', req.body);
+  } else {
+    console.log('CSP Violation: No data received');
+  }
+  res.status(204).end();
+});
+
 // Set explicit MIME types and serve static files
 // Prioritize public over public_html for consolidated directory approach
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -170,16 +199,7 @@ app.use(
   })
 );
 
-// Content Security Policy middleware
-app.use((req, res, next) => {
-  // In development, allow 'unsafe-eval' for easier debugging
-  // In production, this should be more restrictive
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self';"
-  );
-  next();
-});
+// CSP middleware moved above before static file serving
 
 // Request logging middleware
 app.use((req, res, next) => {
