@@ -39,7 +39,7 @@ git commit -m "Clean repository for production deployment with CSS fixes"
 git push origin restore_branch
 ```
 
-This push will automatically trigger the GitHub Actions workflow defined in `.github/workflows/deploy-with-secrets-fixed.yml`.
+This push will automatically trigger the GitHub Actions workflow defined in `.github/workflows/deploy-with-secrets-fixed-new.yml`.
 
 ### 3. GitHub Actions Workflow Process
 
@@ -93,7 +93,50 @@ To test path detection:
 2. Verify that CSS loads with both relative and absolute paths
 3. Confirm the CSS reload mechanism works if initial loading fails
 
-### 6. Troubleshooting
+### 6. MongoDB Dependency and Node.js Detection Fixes
+
+To deploy the MongoDB dependency and Node.js detection fixes, use these commands:
+
+```bash
+# Step 1: Ensure you're in the correct directory
+cd /d D:\Users\gabep\Desktop\Freshshare1,4\FreshShare1.3
+
+# Step 2: Configure Git
+git config --global user.name "FreshShare Deploy"
+git config --global user.email "deploy@freshshare.local"
+
+# Step 3: Make sure you're on the restore_branch
+git checkout -b restore_branch 2>nul || git checkout restore_branch
+
+# Step 4: Add the modified files
+git add mongodb-bypass.js
+git add .github/workflows/deploy-with-secrets-fixed-new.yml
+git add node-detection.sh
+
+# Step 5: Commit the changes
+git commit -m "fix: MongoDB dependency and workflow issues
+
+- Fix missing dependencies in mongodb-bypass.js
+- Add graceful error handling for dotenv and mongoose
+- Ensure workflow continues even if dependencies are missing
+- Update GitHub Actions workflow to install dependencies properly
+- Fix corrupted SSH action script in workflow file
+- Fix DATABASE_SSL context access issue in workflow
+- Create separate Node.js detection script for reliable production setup
+- Update workflow to use dedicated Node.js detection script"
+
+# Step 6: Push to GitHub to trigger deployment
+git push -u origin restore_branch
+```
+
+These changes fix the following issues:
+
+1. MongoDB dependency issues by handling missing `mongoose` and `dotenv` modules
+2. Node.js detection on the production server with a dedicated script
+3. Workflow hanging during MongoDB connection tests
+4. Corrupted SSH script sections in the workflow file
+
+### 7. Troubleshooting
 
 If deployment issues occur:
 - Check GitHub Actions logs for errors
