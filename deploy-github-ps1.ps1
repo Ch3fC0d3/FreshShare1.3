@@ -28,7 +28,13 @@ try {
     
     # Commit changes
     Write-Host "Committing changes..."
-    git commit -m "Clean repository for production deployment with CSS fixes and error handling"
+    git commit -m "fix: MongoDB Atlas IP whitelist bypass solution
+
+- Add robust MongoDB bypass solution with multiple connection strategies
+- Implement fallback configuration for production environments
+- Fix GitHub Actions workflow to continue despite MongoDB connection failures
+- Add DNS resolution checks and SRV record handling
+- Implement retry logic with exponential backoff for connection attempts"
     
     # Create or switch to restore_branch
     Write-Host "Setting up restore_branch..."
