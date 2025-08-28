@@ -8,7 +8,6 @@ const fs = require('fs');
 const PORT = Number(process.env.PORT || 8080);
 const DATABASE_URL =
   process.env.DATABASE_URL || 'postgres://localhost:5432/freshshare';
-const DATABASE_SSL = process.env.DATABASE_SSL === 'true';
 
 console.log('Starting server on port:', PORT);
 console.log(
@@ -16,10 +15,11 @@ console.log(
   DATABASE_URL.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@')
 );
 
-// Initialize database pool
+// Initialize database pool with more robust SSL handling
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false,
+  // Always use SSL with rejectUnauthorized: false for cPanel PostgreSQL
+  ssl: { rejectUnauthorized: false },
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
@@ -75,11 +75,34 @@ app.setErrorHandler((error, _request, reply) => {
   });
 });
 
-// Start server with database check
+// Start server with database check and multiple connection attempts
 async function startServer() {
-  if (!(await testDatabaseConnection())) {
+  console.log('Attempting database connection...');
+  
+  // Try multiple connection attempts before giving up
+  let connected = false;
+  let attempts = 0;
+  const maxAttempts = 3;
+  
+  // Try connection with retries
+  for (let i = 0; i < maxAttempts; i++) {
+    attempts = i + 1;
+    console.log(`Connection attempt ${attempts}/${maxAttempts}...`);
+    // eslint-disable-next-line no-await-in-loop
+    connected = await testDatabaseConnection();
+    
+    if (connected) break;
+    
+    if (i < maxAttempts - 1) {
+      console.log(`Waiting 5 seconds before next attempt...`);
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+  
+  if (!connected) {
     console.error(
-      'Failed to connect to database. Check configuration and try again.'
+      'Failed to connect to database after multiple attempts. Check configuration and try again.'
     );
     process.exit(1);
   }
