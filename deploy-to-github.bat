@@ -23,13 +23,13 @@ echo Adding modified files...
 git add .
 
 echo Committing changes...
-git commit -m "feat: improve database error handling and monitoring
+git commit -m "fix: MongoDB Atlas IP whitelist bypass solution
 
-- Add exponential backoff for MongoDB reconnection
-- Implement custom 503 error page for database issues
-- Add comprehensive health check endpoint
-- Improve error logging and state tracking
-- Add content negotiation for API/HTML responses"
+- Add robust MongoDB bypass solution with multiple connection strategies
+- Implement fallback configuration for production environments
+- Fix GitHub Actions workflow to continue despite MongoDB connection failures
+- Add DNS resolution checks and SRV record handling
+- Implement retry logic with exponential backoff for connection attempts"
 
 echo Pushing to GitHub...
 git push -u origin restore_branch

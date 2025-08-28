@@ -7,16 +7,24 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+const dns = require('dns');
+const { promisify } = require('util');
+
+// Promisify DNS lookup
+const dnsLookup = promisify(dns.lookup);
 
 // Check if MongoDB URI exists
-const MONGODB_URI = process.env.MONGODB_URI;
+const { MONGODB_URI } = process.env;
 if (!MONGODB_URI) {
   console.error('ERROR: MONGODB_URI not set in environment');
   process.exit(1);
 }
 
 console.log('Testing MongoDB connection...');
-console.log('Connection URI (redacted):', MONGODB_URI.replace(/:[^:@]+@/, ':***@'));
+console.log(
+  'Connection URI (redacted):',
+  MONGODB_URI.replace(/:[^:@]+@/, ':***@')
+);
 
 // Connection options with increased timeouts
 const options = {
@@ -28,20 +36,64 @@ const options = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   // Disable srv record lookup which can cause issues in some environments
-  directConnection: true
+  directConnection: true,
 };
 
 // Function to test a connection
 async function testConnection() {
   try {
-    await mongoose.connect(MONGODB_URI, options);
+    // Check if using SRV format
+    if (MONGODB_URI.includes('mongodb+srv://')) {
+      // Extract hostname for DNS check
+      const hostnameMatch = MONGODB_URI.match(/mongodb\+srv:\/\/(?:[^:@]+:[^:@]+@)?([^/:]+)/i);
+      
+      if (hostnameMatch && hostnameMatch[1]) {
+        const hostname = hostnameMatch[1];
+        console.log(`Testing DNS resolution for ${hostname}...`);
+        
+        try {
+          // Test if we can resolve the hostname
+          await dnsLookup(hostname);
+          console.log(`✅ DNS resolution successful for ${hostname}`);
+        } catch (dnsError) {
+          console.error(`❌ DNS resolution failed for ${hostname}: ${dnsError.message}`);
+          console.log('Attempting connection with standard format instead of SRV...');
+          
+          // Try non-SRV format instead
+          const nonSrvUri = MONGODB_URI.replace('mongodb+srv://', 'mongodb://');
+          console.log(
+            'Using non-SRV URI:',
+            nonSrvUri.replace(/:[^:@]+@/, ':***@')
+          );
+          
+          // Connect with non-SRV URI
+          return await tryMongoConnection(nonSrvUri);
+        }
+      }
+    }
+    
+    // If not SRV or DNS lookup succeeded, try normal connection
+    return await tryMongoConnection(MONGODB_URI);
+  } catch (error) {
+    console.error('❌ MongoDB connection process failed:', error.message);
+    return false;
+  }
+}
+
+// Helper function to attempt MongoDB connection
+async function tryMongoConnection(uri) {
+  try {
+    await mongoose.connect(uri, options);
     console.log('✅ MongoDB connection successful');
     
-    // Optional: Test read/write operations
-    const TestModel = mongoose.model('Test', new mongoose.Schema({
-      name: String,
-      date: { type: Date, default: Date.now }
-    }));
+    // Test read/write operations
+    const TestModel = mongoose.model(
+      'Test', 
+      new mongoose.Schema({
+        name: String,
+        date: { type: Date, default: Date.now },
+      })
+    );
     
     await TestModel.findOneAndUpdate(
       { name: 'connection-test' },
@@ -53,22 +105,9 @@ async function testConnection() {
     return true;
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
-    
-    // Provide helpful troubleshooting based on error
-    if (error.message.includes('ENOTFOUND')) {
-      console.log('DNS resolution error: Unable to resolve the MongoDB host.');
-      console.log('Try using a standard connection string without SRV format.');
-      
-      // Attempt to convert from SRV format if needed
-      if (MONGODB_URI.includes('mongodb+srv://')) {
-        const nonSrvUri = MONGODB_URI.replace('mongodb+srv://', 'mongodb://');
-        console.log('Suggested non-SRV URI:', nonSrvUri.replace(/:[^:@]+@/, ':***@'));
-      }
-    }
-    
     return false;
   } finally {
-    // Close connection in either case
+    // Close connection
     if (mongoose.connection.readyState !== 0) {
       await mongoose.connection.close();
     }
@@ -80,15 +119,19 @@ async function main() {
   const maxAttempts = 3;
   let connected = false;
   
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  // Disable ESLint warning for await in loop - we need sequential retries
+  // eslint-disable-next-line no-await-in-loop
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     console.log(`Connection attempt ${attempt}/${maxAttempts}...`);
     
+    // eslint-disable-next-line no-await-in-loop
     connected = await testConnection();
     if (connected) break;
     
     if (attempt < maxAttempts) {
-      console.log(`Waiting 5 seconds before next attempt...`);
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      console.log('Waiting 5 seconds before next attempt...');
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
   
@@ -97,6 +140,7 @@ async function main() {
     
     // Create a fallback connection file
     console.log('Creating a fallback MongoDB connection configuration...');
+    const fs = require('fs');
     const fallbackConfig = `
 // Fallback MongoDB configuration with standard connection string
 // Created by mongodb-connection-fix.js
@@ -116,8 +160,10 @@ module.exports = {
 };
 `;
     
-    require('fs').writeFileSync('config/mongodb-fallback.js', fallbackConfig);
-    console.log('✅ Created fallback MongoDB configuration at config/mongodb-fallback.js');
+    fs.writeFileSync('config/mongodb-fallback.js', fallbackConfig);
+    console.log(
+      '✅ Created fallback MongoDB configuration at config/mongodb-fallback.js'
+    );
     
     process.exit(1);
   }
