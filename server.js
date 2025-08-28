@@ -10,7 +10,7 @@ require('dotenv').config();
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const authJwt = require('./middleware/authJwt');
 const querystring = require('querystring');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = require('node-fetch');
 
 // Configure base URL for deployment in subdirectories
 // Convert '/' to empty string for root deployment
