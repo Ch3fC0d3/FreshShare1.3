@@ -43,6 +43,9 @@ AddDefaultCharset UTF-8
 # URL routing configuration
 # --------------------------------------------
 
+# Error documents
+ErrorDocument 503 /503.html
+
 # Enable rewrite engine
 RewriteEngine On
 RewriteBase /

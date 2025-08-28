@@ -10,6 +10,7 @@ require('dotenv').config();
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const authJwt = require('./middleware/authJwt');
 const querystring = require('querystring');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 // Configure base URL for deployment in subdirectories
 // Convert '/' to empty string for root deployment
@@ -36,62 +37,130 @@ process.on('uncaughtException', (err, origin) => {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Set global template variables
+app.locals.baseUrl = BASE_URL;
+app.locals.title = 'FreshShare';
+
 // Database configuration
 const dbConfig = require('./config/db.config');
 
-// Prioritize MongoDB Atlas connection from environment variables
-let connectionURL;
-if (process.env.MONGODB_URI) {
-  // Use MongoDB Atlas connection from MONGODB_URI
-  connectionURL = process.env.MONGODB_URI;
-  console.log('Using MongoDB Atlas connection from MONGODB_URI');
-} else if (process.env.MONGODB_HOST) {
-  // Use MongoDB Atlas connection from separate host/db variables
-  connectionURL = process.env.MONGODB_HOST;
-  if (!connectionURL.endsWith('/')) {
-    connectionURL += '/';
-  }
-  connectionURL += process.env.MONGODB_DB || dbConfig.DB;
-  console.log('Using MongoDB Atlas connection from MONGODB_HOST');
-} else {
-  // Fallback to local MongoDB connection
-  connectionURL = `mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}`;
-}
-
-// Connect to MongoDB with better error handling and fallback mode
-console.log('Attempting to connect to MongoDB...', {
-  connectionString: connectionURL ? 'Configured' : 'Missing',
-  usingAtlas: !!(process.env.MONGODB_URI || process.env.MONGODB_HOST)
-});
+// Get MongoDB connection URL and options from config
+const connectionURL = dbConfig.getUri();
+const mongooseOptions = {
+  ...dbConfig.options,
+  serverSelectionTimeoutMS: 10000,
+  connectTimeoutMS: 30000,
+  heartbeatFrequencyMS: 30000,
+  keepAlive: true,
+  keepAliveInitialDelay: 300000
+};
 
 // Track MongoDB connection state
 let isMongoConnected = false;
+let connectionAttempts = 0;
+const maxAttempts = 5;
+const retryDelay = 5000;
 
-mongoose.connect(connectionURL, dbConfig.options)
-  .then(() => {
-    console.log('Successfully connected to MongoDB.');
-    isMongoConnected = true;
-    initializeDatabase();
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    logErrorToFile(err);
-    isMongoConnected = false;
+// Log connection details (safely)
+const safeUrl = connectionURL.replace(/:[^:@]+@/, ':***@');
+console.log('MongoDB connection details:', {
+  url: safeUrl,
+  database: dbConfig.DB,
+  ssl: mongooseOptions.ssl,
+  environment: process.env.NODE_ENV
+});
+
+// Handle MongoDB connection state changes
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connection established');
+  isMongoConnected = true;
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB connection lost');
+  isMongoConnected = false;
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+  logErrorToFile(err);
+  isMongoConnected = false;
+});
+
+// Graceful shutdown handler
+process.on('SIGINT', () => {
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
   });
+});
+
+// Connect with retries using exponential backoff
+async function connectWithRetry() {
+  const baseDelay = 1000; // Start with 1 second
+  const maxDelay = 30000; // Max 30 seconds between retries
+
+  while (connectionAttempts < maxAttempts) {
+    connectionAttempts++;
+    try {
+      console.log(`MongoDB connection attempt ${connectionAttempts}/${maxAttempts}...`);
+      await mongoose.connect(connectionURL, mongooseOptions);
+      console.log('Successfully connected to MongoDB');
+      isMongoConnected = true;
+      initializeDatabase();
+      
+      // Reset connection state listeners
+      mongoose.connection.on('disconnected', async () => {
+        console.log('MongoDB connection lost - attempting reconnection...');
+        isMongoConnected = false;
+        connectionAttempts = 0; // Reset attempts for reconnection
+        await connectWithRetry();
+      });
+      
+      return;
+    } catch (err) {
+      console.error(`MongoDB connection attempt ${connectionAttempts} failed:`, err.message);
+      logErrorToFile(err);
+      
+      if (connectionAttempts < maxAttempts) {
+        // Calculate delay with exponential backoff and jitter
+        const exponentialDelay = Math.min(
+          maxDelay,
+          baseDelay * Math.pow(2, connectionAttempts - 1)
+        );
+        const jitter = Math.random() * 1000; // Add up to 1 second of random jitter
+        const delay = exponentialDelay + jitter;
+        
+        console.log(`Retrying in ${Math.round(delay/1000)} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        console.error('All MongoDB connection attempts failed - running in fallback mode');
+        break;
+      }
+    }
+  }
+}
+
+connectWithRetry();
+
+// Configure Express middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Serve static files first
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Add middleware to check MongoDB connection
 app.use((req, res, next) => {
-  // Skip MongoDB check for static files and base URL fix script
+  // Skip MongoDB check for static files, base URL fix script, and health check
   if (req.path.startsWith('/css/') || 
       req.path.startsWith('/js/') || 
       req.path.startsWith('/images/') || 
       req.path === '/js/base-url-fix.js' ||
-      req.path === '/favicon.ico') {
-    return next();
-  }
-
-  // Allow health check endpoint
-  if (req.path === '/health') {
+      req.path === '/favicon.ico' ||
+      req.path === '/health') {
     return next();
   }
 
@@ -115,12 +184,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize database with roles if needed
+// Initialize database with better error handling
 async function initializeDatabase() {
   try {
+    // First check if we can query the database
+    const isConnected = mongoose.connection.readyState === 1;
+    if (!isConnected) {
+      throw new Error('Cannot initialize database - MongoDB not connected');
+    }
+
     const db = require('./models');
     const Role = db.role;
     
+    // Check if roles exist
     const count = await Role.estimatedDocumentCount();
     
     if (count === 0) {
@@ -205,7 +281,7 @@ app.use(express.static(path.join(__dirname, 'public_html'), {
 app.use(cookieParser());
 
 // Reverse proxy to Fastify backend (secured)
-const FASTIFY_BACKEND_URL = process.env.FASTIFY_BACKEND_URL || 'http://localhost:8089';
+const FASTIFY_BACKEND_URL = process.env.FASTIFY_BACKEND_URL || 'http://localhost:8080';
 app.use(
   '/api/pack',
   authJwt.verifyToken,
@@ -249,12 +325,53 @@ app.use((req, res, next) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  console.error('Server error:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    query: req.query,
+    body: req.body,
+    headers: req.headers,
+    mongoConnected: isMongoConnected
   });
+
+  // Log error to file
+  logErrorToFile({
+    timestamp: new Date().toISOString(),
+    error: err.message,
+    stack: err.stack,
+    request: {
+      path: req.path,
+      method: req.method,
+      query: req.query,
+      headers: req.headers
+    },
+    mongoConnected: isMongoConnected
+  });
+
+  // Handle database connection errors
+  if (!isMongoConnected || err.name === 'MongoError' || err.name === 'MongooseError') {
+    if (req.accepts('html')) {
+      return res.status(503).sendFile(path.join(__dirname, 'public', '503.html'));
+    } else {
+      return res.status(503).json({
+        success: false,
+        message: 'Database service temporarily unavailable'
+      });
+    }
+  }
+
+  // Default error response
+  if (req.accepts('html')) {
+    res.status(500).sendFile(path.join(__dirname, 'public', '503.html'));
+  } else {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
 });
 
 // Ensure uploads directory exists
@@ -330,13 +447,52 @@ app.use('/api/marketplace', require('./routes/marketplace.routes'));
 app.use('/api/groups', require('./routes/groups.routes'));
 app.use('/api/orders', require('./routes/orders.routes'));
 // Health check endpoint
-app.get('/health', (req, res) => {
-  const dbState = mongoose.connection.readyState;
-  // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
-  if (dbState === 1) {
-    res.status(200).json({ status: 'ok', database: 'connected' });
-  } else {
-    res.status(503).json({ status: 'error', database: 'disconnected', readyState: dbState });
+app.get('/health', async (req, res) => {
+  try {
+    // Check MongoDB connection
+    const mongoState = mongoose.connection.readyState;
+    const mongoStatus = {
+      connected: mongoState === 1,
+      state: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoState] || 'unknown',
+      lastError: mongoose.connection.lastError?.message
+    };
+
+    // Check Fastify backend
+    let fastifyStatus = { connected: false, error: null };
+    try {
+      const fastifyResponse = await fetch(`${FASTIFY_BACKEND_URL}/health`, {
+        timeout: 5000
+      });
+      fastifyStatus.connected = fastifyResponse.ok;
+    } catch (err) {
+      fastifyStatus.error = err.message;
+    }
+
+    // Check system resources
+    const systemStatus = {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage()
+    };
+
+    // Determine overall status
+    const isHealthy = mongoStatus.connected && fastifyStatus.connected;
+
+    res.status(isHealthy ? 200 : 503).json({
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      services: {
+        mongodb: mongoStatus,
+        fastify: fastifyStatus
+      },
+      system: systemStatus
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      error: err.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

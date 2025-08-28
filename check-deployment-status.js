@@ -3,9 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
+require('dotenv').config();
+const mongoose = require('mongoose');
+
 // Configuration
-const EXPRESS_PORT = 3001;
-const FASTIFY_PORT = 8080;
+const EXPRESS_PORT = process.env.PORT || 3001;
+const FASTIFY_PORT = process.env.FASTIFY_PORT || 8080;
 const LOG_FILES = {
   express: path.join(
     process.env.HOME || '/home/myfrovov',
@@ -15,6 +18,10 @@ const LOG_FILES = {
     process.env.HOME || '/home/myfrovov',
     'public_html/fastify-backend/fastify.log'
   ),
+  mongodb: path.join(
+    process.env.HOME || '/home/myfrovov',
+    'public_html/mongodb.log'
+  )
 };
 
 console.log('=== FreshShare Deployment Status Check ===');
@@ -156,11 +163,68 @@ function checkDbInitialization() {
   }
 }
 
+// Test MongoDB connection
+async function checkMongoDB() {
+  console.log('\n[MongoDB] Testing connection...');
+  
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error('[MongoDB] Error: MONGODB_URI not set in environment');
+    return false;
+  }
+
+  console.log('[MongoDB] Connection URI:', uri.replace(/:[^:@]+@/, ':***@'));
+  
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      ssl: process.env.MONGODB_SSL === 'true',
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+
+    console.log('[MongoDB] Connection successful');
+    
+    // Test write operation
+    const testDoc = await mongoose.connection.db
+      .collection('connection_tests')
+      .insertOne({ test: true, timestamp: new Date() });
+    console.log('[MongoDB] Write test successful');
+
+    // Clean up test document
+    await mongoose.connection.db
+      .collection('connection_tests')
+      .deleteOne({ _id: testDoc.insertedId });
+    console.log('[MongoDB] Delete test successful');
+
+    await mongoose.disconnect();
+    return true;
+  } catch (err) {
+    console.error('[MongoDB] Connection error:', err.message);
+    if (err.name === 'MongoServerSelectionError') {
+      console.log('\n[MongoDB] Possible causes:');
+      console.log('1. Network connectivity issues');
+      console.log('2. MongoDB Atlas IP whitelist restrictions');
+      console.log('3. Invalid connection string');
+      console.log('4. Database server is down');
+    }
+    return false;
+  }
+}
+
 // Run all checks
 async function runChecks() {
+  console.log('=== FreshShare Deployment Status Check ===');
+  console.log('Running checks at:', new Date().toISOString());
+
+  // Check MongoDB first
+  const mongodbOk = await checkMongoDB();
+
   // Check services
-  await checkService('Express', 'localhost', EXPRESS_PORT);
-  await checkService('Fastify', 'localhost', FASTIFY_PORT);
+  const expressOk = await checkService('Express', 'localhost', EXPRESS_PORT);
+  const fastifyOk = await checkService('Fastify', 'localhost', FASTIFY_PORT);
 
   // Check logs
   Object.entries(LOG_FILES).forEach(([name, file]) => {
@@ -174,10 +238,17 @@ async function runChecks() {
   checkDbInitialization();
 
   console.log('\n=== Check Complete ===');
-  console.log(
-    'If you continue to see 503 errors, please check the logs for specific errors'
-  );
-  console.log('and ensure both Express and Fastify services are running.');
+  console.log('Status Summary:');
+  console.log('- MongoDB Connection:', mongodbOk ? '✅ OK' : '❌ Failed');
+  console.log('- Express Server:', expressOk ? '✅ OK' : '❌ Failed');
+  console.log('- Fastify Backend:', fastifyOk ? '✅ OK' : '❌ Failed');
+
+  if (!mongodbOk || !expressOk || !fastifyOk) {
+    console.log('\n⚠️ Action Required:');
+    if (!mongodbOk) console.log('- Check MongoDB connection string and network access');
+    if (!expressOk) console.log('- Verify Express server is running and check express.log');
+    if (!fastifyOk) console.log('- Verify Fastify backend is running and check fastify.log');
+  }
 }
 
 runChecks();

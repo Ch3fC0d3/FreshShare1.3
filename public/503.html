@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshShare - Service Temporarily Unavailable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        h1 {
+            color: #0d6efd;
+            margin-bottom: 1rem;
+        }
+        .status {
+            font-size: 1.2rem;
+            color: #dc3545;
+            margin-bottom: 1.5rem;
+        }
+        .message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: #6c757d;
+        }
+        .retry-button {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .retry-button:hover {
+            background-color: #0b5ed7;
+        }
+        .home-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .home-button:hover {
+            background-color: #5c636a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Maintenance Mode</h1>
+        <div class="status">Database connection is currently unavailable.</div>
+        <div class="message">
+            We're working to restore service as quickly as possible.<br>
+            Please try again in a few minutes.
+        </div>
+        <div>
+            <a href="javascript:window.location.reload()" class="retry-button">Retry Now</a>
+            <a href="/" class="home-button">Return Home</a>
+        </div>
+    </div>
+</body>
+</html>
