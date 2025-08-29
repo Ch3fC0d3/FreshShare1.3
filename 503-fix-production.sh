@@ -282,7 +282,8 @@ DIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 cd "\$DIR"
 
 # Kill any existing processes
-pkill -f "node \$DIR/server.js" || echo "No existing Fastify processes found"
+# Kill the TypeScript process specifically to avoid conflicts with the main express server
+pkill -f "server.ts" || echo "No existing Fastify processes found"
 
 # Activate Node.js environment
 source ../activate-node.sh
@@ -298,7 +299,8 @@ fi
 
 # Start the server in background with proper detachment
 echo "Starting Fastify backend..."
-node server.js > fastify.log 2>&1 &
+# Use ts-node loader to run the TypeScript source directly, as defined in package.json
+node --loader ts-node/esm server.ts > fastify.log 2>&1 &
 
 # Save PID
 PID=\$!
@@ -464,7 +466,7 @@ else
   echo -e "Check logs in $(pwd)/express.log"
 fi
 
-if pgrep -f "node $(pwd)/fastify-backend/server.js" > /dev/null; then
+if pgrep -f "server.ts" > /dev/null; then
   echo -e "${GREEN}Fastify backend is running${NC}"
 else
   echo -e "${RED}Fastify backend is not running${NC}"

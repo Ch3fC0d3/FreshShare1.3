@@ -143,6 +143,14 @@ async function connectWithRetry() {
 
 connectWithRetry();
 
+// Define CORS options
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
+};
+
 // Configure Express middleware
 app.use(cors(corsOptions));
 app.use(express.json());
